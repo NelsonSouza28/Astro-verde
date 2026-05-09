@@ -32,7 +32,7 @@ const Dashboard = {
     if (!header) return;
     const base = header.dataset.baseLabel || header.textContent.trim();
     header.dataset.baseLabel = base;
-    header.innerHTML = `${base} ${this._badge(sensorKey)}`;
+    header.innerHTML = `<span class="kpi-title-group">${base} ${this._badge(sensorKey)}</span>`;
 
     if (timestampId) {
       const stampEl = document.getElementById(timestampId);
