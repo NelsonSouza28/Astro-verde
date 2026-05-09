@@ -104,12 +104,7 @@ const Dashboard = {
     this._setHeaderBadge('lightingHeader', 'iluminacao');
     const state = AppState.actuators.lightingState;
     const power = AppState.actuators.lightingPower;
-    stateEl.innerHTML = `
-      <span class="light-state ${state === 'acesa' ? 'on' : 'off'}">${state === 'acesa' ? 'Acesa' : 'Apagada'}</span>
-      <button class="btn btn-primary btn-light-toggle" type="button" data-ui-action="toggle-lighting-card">
-        ${state === 'acesa' ? 'Desligar' : 'Ligar'}
-      </button>
-    `;
+    stateEl.innerHTML = `<span class="light-state ${state === 'acesa' ? 'on' : 'off'}">${state === 'acesa' ? 'Acesa' : 'Apagada'}</span>`;
     if (subEl) subEl.textContent = `Potencia: ${power}%`;
   },
 
