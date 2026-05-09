@@ -117,18 +117,20 @@
               <i class="ph ph-drop"></i>
             </div>
             <div class="kpi-value" id="waterLevel">88%</div>
-            <div class="kpi-sub">EficiÃªncia HÃ­drica: <span class="status-ok">99%</span></div>`r`n            <div class="kpi-sub" id="waterTimestamp">Ultima leitura: -</div>
+            <div class="kpi-sub">Eficiência Hídrica: <span class="status-ok">99%</span></div>
+            <div class="kpi-sub" id="waterTimestamp">Última leitura: -</div>
           </div>
 
           <div class="card" id="cardPh">
             <div class="kpi-header">
-              NÃ­vel de pH
+              <span id="phHeader">Nível de pH</span>
               <i class="ph ph-flask"></i>
             </div>
             <div class="kpi-value" id="phValue">6.1</div>
             <div class="kpi-sub">
               Status: <span class="status-text status-ok" id="phStatus">Ideal (5.5â€“6.5)</span>
             </div>
+            <div class="kpi-sub" id="phTimestamp">Última leitura: -</div>
           </div>
 
           <div class="card" id="cardEc">
@@ -372,7 +374,42 @@
             <div class="panel">
               <div class="panel-title">AutomaÃ§Ãµes Manuais e Controles Manuais</div>
 
-              <div class="auto-sub-title">Painel de Controles Manuais</div><div class="list-group" style="margin-bottom:1rem"><div class="list-item"><div class="item-info"><h4>Fluxo Laminar</h4><p>Defina L/h manualmente</p></div><div><input id="inputFluxo" class="form-input" type="number" min="0" placeholder="L/h" /><button id="btnSalvarFluxo" class="btn btn-action" type="button">Salvar</button></div></div><div class="list-item"><div class="item-info"><h4>IluminaÃ§Ã£o</h4><p>Modo e intensidade</p></div><div style="display:grid;gap:.35rem"><select id="inputLuzOn" class="form-select"><option value="on">on</option><option value="off">off</option></select><select id="inputLuzModo" class="form-select"><option value="manual">Manual</option><option value="automatico">AutomÃ¡tico</option></select><input id="inputLuzIntensidade" class="form-input" type="number" min="0" max="100" placeholder="Intensidade 0-100" /><input id="inputLuzInicio" class="form-input" type="time" /><input id="inputLuzFim" class="form-input" type="time" /><button id="btnSalvarLuz" class="btn btn-action" type="button">Salvar</button></div></div></div><div class="auto-sub-title">Controles Manuais de AutomaÃ§Ã£o</div>
+                            <div class="auto-sub-title">Painel de Controles Manuais</div>
+              <div class="manual-controls-grid" style="margin-bottom:1rem">
+                <div class="list-item manual-control-card">
+                  <div class="item-info">
+                    <h4>Fluxo Laminar</h4>
+                    <p>Defina L/h manualmente</p>
+                  </div>
+                  <div class="manual-control-fields">
+                    <input id="inputFluxo" class="form-input" type="number" min="0" placeholder="L/h">
+                    <button id="btnSalvarFluxo" class="btn btn-action" type="button">Salvar</button>
+                  </div>
+                </div>
+                <div class="list-item manual-control-card">
+                  <div class="item-info">
+                    <h4>Iluminação</h4>
+                    <p>Modo, intensidade e janela de horário</p>
+                  </div>
+                  <div class="manual-control-fields">
+                    <select id="inputLuzOn" class="form-select">
+                      <option value="on">Ligada</option>
+                      <option value="off">Desligada</option>
+                    </select>
+                    <select id="inputLuzModo" class="form-select">
+                      <option value="manual">Manual</option>
+                      <option value="automatico">Automático</option>
+                    </select>
+                    <input id="inputLuzIntensidade" class="form-input" type="number" min="0" max="100" placeholder="Intensidade 0-100%">
+                    <div class="manual-time-grid">
+                      <input id="inputLuzInicio" class="form-input" type="time">
+                      <input id="inputLuzFim" class="form-input" type="time">
+                    </div>
+                    <button id="btnSalvarLuz" class="btn btn-action" type="button">Salvar</button>
+                  </div>
+                </div>
+              </div>
+              <div class="auto-sub-title">Controles Manuais de Automação</div>
               <div class="list-group" style="margin-bottom:1.5rem">
                 <div class="list-item">
                   <div class="item-info">
@@ -515,6 +552,9 @@
 
 </body>
 </html>
+
+
+
 
 
 

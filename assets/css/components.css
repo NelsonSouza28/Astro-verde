@@ -523,10 +523,11 @@
 }
 
 .badge-status.info { background: #dbeafe; color: #1e3a8a; }
-.log-filters { display:flex; gap:.5rem; margin-bottom:.75rem; flex-wrap:wrap; }
+.log-filters { display:flex; gap:.5rem; margin-bottom:.75rem; flex-wrap:wrap; }`r`n.log-filters .btn { border: 1px solid var(--border-glow); }
 #logsContainer { max-height: 420px; overflow-y: auto; background:#080b12; border-radius:8px; padding:.75rem; }
 .live-log-line { font-family: monospace; font-size:.82rem; padding:.2rem 0; }
 .log-info { color: #ffffff; }
 .log-warn { color: #facc15; }
 .log-error { color: #ef4444; }
 .log-action { color: #22c55e; }
+

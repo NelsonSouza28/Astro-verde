@@ -441,3 +441,37 @@
     font-size: 0.75rem;
   }
 }
+
+.manual-controls-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.manual-control-card {
+  align-items: flex-start;
+  border-left: 3px solid var(--secondary-green);
+}
+
+.manual-control-fields {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 250px;
+  width: min(360px, 100%);
+}
+
+.manual-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .manual-control-fields {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .manual-time-grid {
+    grid-template-columns: 1fr;
+  }
+}
