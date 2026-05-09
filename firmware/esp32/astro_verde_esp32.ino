@@ -8,13 +8,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-
-// ===== CONFIGURACAO =====
-const char* WIFI_SSID = "SEU_WIFI";
-const char* WIFI_PASSWORD = "SUA_SENHA";
-
-const char* BACKEND_BASE_URL = "http://SEU_BACKEND:3001";
-const char* DEVICE_ID = "astro-verde-esp";
+#include "astro_verde_esp32_config.h"
 
 // pH analogico (ajuste para seu hardware)
 const int PH_PIN = 34;
@@ -34,6 +28,23 @@ const bool BOIA_ACTIVE_LOW = true;
 // Intervalos
 const unsigned long SEND_INTERVAL_MS = 5000;
 const unsigned long COMMAND_POLL_MS = 5000;
+
+// Validacao basica para evitar subir firmware sem configurar.
+#ifndef WIFI_SSID
+#error "Defina WIFI_SSID em astro_verde_esp32_config.h"
+#endif
+
+#ifndef WIFI_PASSWORD
+#error "Defina WIFI_PASSWORD em astro_verde_esp32_config.h"
+#endif
+
+#ifndef BACKEND_BASE_URL
+#error "Defina BACKEND_BASE_URL em astro_verde_esp32_config.h"
+#endif
+
+#ifndef DEVICE_ID
+#error "Defina DEVICE_ID em astro_verde_esp32_config.h"
+#endif
 
 unsigned long lastSendAt = 0;
 unsigned long lastPollAt = 0;

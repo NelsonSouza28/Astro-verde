@@ -30,12 +30,19 @@ Isso cria:
 ## 4) Firmware ESP32
 Arquivo pronto:
 - `firmware/esp32/astro_verde_esp32.ino`
+- `firmware/esp32/astro_verde_esp32_config.example.h`
 
-Edite no topo:
-- `WIFI_SSID`
-- `WIFI_PASSWORD`
-- `BACKEND_BASE_URL` (IP/host do backend)
-- `DEVICE_ID` (igual ao env do backend)
+Passos:
+1. Copie `astro_verde_esp32_config.example.h` para `astro_verde_esp32_config.h`.
+2. Preencha:
+   - `WIFI_SSID`
+   - `WIFI_PASSWORD`
+   - `BACKEND_BASE_URL` (IP local do backend, ex.: `http://192.168.0.120:3001`)
+   - `DEVICE_ID` (igual ao env do backend)
+3. Compile e grave no ESP32.
+
+Observação:
+- O sketch já valida essas definições e interrompe a compilação se faltar algum campo.
 
 ## 5) Pinos
 No sketch atual:

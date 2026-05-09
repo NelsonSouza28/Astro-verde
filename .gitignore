@@ -13,3 +13,4 @@ server/astroverde.db
 .DS_Store
 Thumbs.db
 .vercel
+firmware/esp32/astro_verde_esp32_config.h
