@@ -28,6 +28,31 @@ function bindStaticActions() {
     'close-form-modal': closeFormModal,
     'inventory-add': () => Inventory.openAddForm(),
     'harvest-add': () => Harvest.openAddForm(),
+    'toggle-lighting-card': async () => {
+      const isOn = AppState.actuators.lightingState === 'acesa';
+      const nextOn = !isOn;
+      try {
+        try {
+          await ApiService.setLuz({
+            modo: 'manual',
+            on: nextOn,
+            intensidade: nextOn ? 100 : 0,
+            horario_inicio: null,
+            horario_fim: null,
+          });
+        } catch (_) {
+          await ApiService.setLighting(nextOn ? 'on' : 'off', nextOn ? 100 : 0);
+        }
+
+        AppState.actuators.lightingState = nextOn ? 'acesa' : 'apagada';
+        AppState.actuators.lightingPower = nextOn ? 100 : 0;
+        Logger.add('action', 'iluminacao', `Luz ${nextOn ? 'acesa' : 'apagada'} via dashboard.`);
+        Dashboard.refresh();
+      } catch (error) {
+        Modal.show('Falha no comando', 'Nao foi possivel alterar o estado da luz.', 'danger');
+        Logger.add('error', 'iluminacao', `Falha ao alternar luz: ${error.message}`);
+      }
+    },
     'check-api-health': async () => {
       const textEl = document.getElementById('apiHealthText');
       if (textEl) textEl.textContent = 'Verificando API...';
@@ -58,9 +83,11 @@ function bindStaticActions() {
       }
     },
   };
-  document.querySelectorAll('[data-ui-action]').forEach((element) => {
-    const handler = handlers[element.dataset.uiAction];
-    if (handler) element.addEventListener('click', handler);
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-ui-action]');
+    if (!target) return;
+    const handler = handlers[target.dataset.uiAction];
+    if (handler) handler(event);
   });
 }
 
