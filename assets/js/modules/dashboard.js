@@ -23,8 +23,8 @@ const Dashboard = {
     const created = meta.lastReadingAt ? new Date(meta.lastReadingAt) : null;
     const offline = created ? (Date.now() - created.getTime()) > 60000 : false;
     if (offline) return '<span class="badge-status danger">OFFLINE</span>';
-    if (meta.mode === 'real') return '<span class="badge-status active">SIM</span>';
-    return '<span class="badge-status inactive">NAO</span>';
+    if (meta.mode === 'real') return '<span class="badge-status active">REAL</span>';
+    return '<span class="badge-status info">SIMULADO</span>';
   },
 
   _setHeaderBadge(headerId, sensorKey, timestampId) {
