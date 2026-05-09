@@ -535,6 +535,7 @@
 }
 
 .badge-status.info { background: #dbeafe; color: #1e3a8a; }
+.badge-status.editable { background: #fef3c7; color: #92400e; }
 .log-filters { display:flex; gap:.5rem; margin-bottom:.75rem; flex-wrap:wrap; }
 .log-filters .btn { border: 1px solid var(--border-glow); }
 #logsContainer { max-height: 420px; overflow-y: auto; background:#080b12; border-radius:8px; padding:.75rem; }
