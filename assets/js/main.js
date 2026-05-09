@@ -28,6 +28,35 @@ function bindStaticActions() {
     'close-form-modal': closeFormModal,
     'inventory-add': () => Inventory.openAddForm(),
     'harvest-add': () => Harvest.openAddForm(),
+    'check-api-health': async () => {
+      const textEl = document.getElementById('apiHealthText');
+      if (textEl) textEl.textContent = 'Verificando API...';
+      try {
+        const response = await HttpClient.request(`${ApiConfig.baseUrl}${ApiConfig.endpoints.health}`);
+        const isOk = response?.status === 'ok' || response?.data?.status === 'ok';
+        if (textEl) textEl.textContent = isOk ? 'API online e pronta para hardware.' : 'API respondeu, mas sem status ok.';
+        Logger.add(isOk ? 'info' : 'warn', 'hardware', 'Verificação de saúde da API executada.');
+      } catch (error) {
+        if (textEl) textEl.textContent = 'Falha ao conectar API.';
+        Logger.add('error', 'hardware', `Falha health-check API: ${error.message}`);
+      }
+    },
+    'check-esp-device': async () => {
+      const deviceId = (document.getElementById('espDeviceId')?.value || '').trim();
+      if (!deviceId) {
+        Modal.show('Device obrigatório', 'Informe o device_id do ESP.', 'warning');
+        return;
+      }
+      try {
+        const payload = await HttpClient.request(`${ApiConfig.baseUrl}/esp/commands/${deviceId}`);
+        const count = payload?.data?.commands?.length || 0;
+        Modal.show('ESP consultado', `Device ${deviceId} respondeu polling com ${count} comando(s).`, 'success');
+        Logger.add('action', 'hardware', `Polling consultado para ${deviceId}: ${count} comando(s).`);
+      } catch (error) {
+        Modal.show('Falha no ESP bridge', `Não foi possível consultar ${deviceId}.`, 'danger');
+        Logger.add('error', 'hardware', `Falha ao consultar ESP ${deviceId}: ${error.message}`);
+      }
+    },
   };
   document.querySelectorAll('[data-ui-action]').forEach((element) => {
     const handler = handlers[element.dataset.uiAction];

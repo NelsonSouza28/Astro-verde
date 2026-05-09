@@ -1,23 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Astro Verde | Fazenda Vertical</title>
-
-  <!-- Fontes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Ícones -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-  <!-- Gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Estilos do projeto — separados por responsabilidade -->
   <link rel="stylesheet" href="assets/css/variables.css">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/layout.css">
@@ -25,499 +16,185 @@
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <link rel="stylesheet" href="assets/css/automation.css">
 </head>
-
 <body>
-
-  <!-- ============================================================
-       SIDEBAR — navegação lateral
-  ============================================================ -->
   <aside class="sidebar">
-
     <div class="brand">
       <img src="./ASTRO.png" alt="Logo Astro Verde">
       <span>Astro Verde</span>
     </div>
-
     <nav class="nav-menu">
-      <a class="nav-item active" href="#dashboard" data-tab="dashboard">
-        <i class="ph ph-squares-four"></i>
-        <span>Dashboard</span>
-      </a>
-      <a class="nav-item" href="#estoque" data-tab="estoque">
-        <i class="ph ph-package"></i>
-        <span>Insumos (RF11)</span>
-      </a>
-      <a class="nav-item" href="#safras" data-tab="safras">
-        <i class="ph ph-plant"></i>
-        <span>Safras (RF05)</span>
-      </a>
-      <a class="nav-item" href="#automacao" data-tab="automacao">
-        <i class="ph ph-broadcast"></i>
-        <span>Automação</span>
-      </a>
-      <a class="nav-item" href="#log" data-tab="log">
-        <i class="ph ph-clock"></i>
-        <span>Log</span>
-      </a>
+      <a class="nav-item active" href="#dashboard" data-tab="dashboard"><i class="ph ph-squares-four"></i><span>Dashboard</span></a>
+      <a class="nav-item" href="#estoque" data-tab="estoque"><i class="ph ph-package"></i><span>Insumos (RF11)</span></a>
+      <a class="nav-item" href="#safras" data-tab="safras"><i class="ph ph-plant"></i><span>Safras (RF05)</span></a>
+      <a class="nav-item" href="#automacao" data-tab="automacao"><i class="ph ph-broadcast"></i><span>Automacao</span></a>
+      <a class="nav-item" href="#log" data-tab="log"><i class="ph ph-clock"></i><span>Log</span></a>
     </nav>
-
     <div class="team-ft--sidebar">
       <div class="team-content">
-        <div class="team-info">
-          <h4>INOVATEC</h4>
-          <p class="year-info">2026</p>
-        </div>
-        <div class="designed">
-          <p>feito por</p>
-          <h4><a href="https://www.instagram.com/verde.astro/" target="_blank">Astro Verde</a></h4>
-        </div>
+        <div class="team-info"><h4>INOVATEC</h4><p class="year-info">2026</p></div>
+        <div class="designed"><p>feito por</p><h4><a href="https://www.instagram.com/verde.astro/" target="_blank">Astro Verde</a></h4></div>
       </div>
     </div>
-
   </aside>
 
-
-  <!-- ============================================================
-       CONTEÚDO PRINCIPAL
-  ============================================================ -->
   <main class="main-wrapper">
-
-    <!-- Topbar -->
-    <header class="topbar">`r`n      <div>`r`n        <h2 class="page-title" id="pageTitle">Vis�o Geral - Monitoramento Cont�nuo</h2>`r`n        <small id="buildVersion" style="color:#6c757d;font-weight:600;">build 2026-05-09.3</small>`r`n      </div>
+    <header class="topbar">
+      <div>
+        <h2 class="page-title" id="pageTitle">Visao Geral - Monitoramento Continuo</h2>
+        <small id="buildVersion" style="color:#6c757d;font-weight:600;">build 2026-05-09.5</small>
+      </div>
       <div class="topbar-actions">
-        <div class="sys-status">
-          <div class="pulse"></div>
-          <span id="sysStatusText">Modo Mock Ativo</span>
-        </div>
-        <button class="btn-icon" type="button" data-ui-action="show-notifications" title="Notificações">
-          <i class="ph ph-bell"></i>
-          <span class="badge hidden" id="notifBadge">0</span>
-        </button>
+        <div class="sys-status"><div class="pulse"></div><span id="sysStatusText">Modo Mock Ativo</span></div>
+        <button class="btn-icon" type="button" data-ui-action="show-notifications" title="Notificacoes"><i class="ph ph-bell"></i><span class="badge hidden" id="notifBadge">0</span></button>
         <div class="user-avatar" title="Operador">OP</div>
       </div>
     </header>
 
-    <!-- Área de conteúdo rolável -->
     <div class="content-area">
-
-
-      <!-- ===== VIEW: DASHBOARD ===== -->
       <section id="dashboard" class="view-section active">
-
-        <!-- Banner de alertas ativos (preenchido por Alerts.render()) -->
         <div class="alerts-banner" id="alertsBanner"></div>
 
-        <!-- KPIs -->
         <div class="kpi-grid">
-
           <div class="card">
-            <div class="kpi-header">
-              Nível do Reservatório
-              <i class="ph ph-drop"></i>
-            </div>
+            <div class="kpi-header"><span id="waterHeader">Nivel do Reservatorio</span><i class="ph ph-drop"></i></div>
             <div class="kpi-value" id="waterLevel">88%</div>
-            <div class="kpi-sub">Efici�ncia H�drica: <span class="status-ok">99%</span></div>
-            <div class="kpi-sub" id="waterTimestamp">�ltima leitura: -</div>
+            <div class="kpi-sub">Eficiencia hidrica: <span class="status-ok">99%</span></div>
+            <div class="kpi-sub" id="waterTimestamp">Ultima leitura: -</div>
           </div>
 
           <div class="card" id="cardPh">
-            <div class="kpi-header">
-              <span id="phHeader">N�vel de pH</span>
-              <i class="ph ph-flask"></i>
-            </div>
+            <div class="kpi-header"><span id="phHeader">Nivel de pH</span><i class="ph ph-flask"></i></div>
             <div class="kpi-value" id="phValue">6.1</div>
-            <div class="kpi-sub">
-              Status: <span class="status-text status-ok" id="phStatus">Ideal (5.5–6.5)</span>
-            </div>
-            <div class="kpi-sub" id="phTimestamp">�ltima leitura: -</div>
+            <div class="kpi-sub">Status: <span class="status-text status-ok" id="phStatus">Ideal (5.5-6.5)</span></div>
+            <div class="kpi-sub" id="phTimestamp">Ultima leitura: -</div>
           </div>
 
           <div class="card" id="cardEc">
-            <div class="kpi-header">
-              <span id="ecHeader">Minerais (EC / TDS)</span><i class="ph ph-atom"></i>
-            </div>
-            <div class="kpi-value">
-              <span id="ecValue">1.75</span>
-              <span class="kpi-unit">mS/cm</span>
-            </div>
+            <div class="kpi-header"><span id="ecHeader">Minerais (EC / TDS)</span><i class="ph ph-atom"></i></div>
+            <div class="kpi-value"><span id="ecValue">1.75</span><span class="kpi-unit">mS/cm</span></div>
             <div class="kpi-sub">TDS: <span id="tdsValue">875</span> ppm</div>
           </div>
 
           <div class="card" id="cardTemp">
-            <div class="kpi-header">
-              <span id="tempHeader">Temperatura Ambiente</span><i class="ph ph-thermometer"></i>
-            </div>
+            <div class="kpi-header"><span id="tempHeader">Temperatura Ambiente</span><i class="ph ph-thermometer"></i></div>
             <div class="kpi-value" id="tempValue">23.0°C</div>
-            <div class="kpi-sub">
-              Status: <span class="status-text status-ok" id="tempStatus">Ideal (18–26°C)</span>
-            </div>
+            <div class="kpi-sub">Status: <span class="status-text status-ok" id="tempStatus">Ideal (18-26°C)</span></div>
           </div>
 
           <div class="card">
-            <div class="kpi-header">
-              <span id="nftHeader">Fluxo Laminar (NFT)</span><i class="ph ph-waves"></i>
-            </div>
+            <div class="kpi-header"><span id="nftHeader">Fluxo Laminar (NFT)</span><i class="ph ph-waves"></i></div>
             <div class="kpi-value kpi-value-md" id="nftStatusVal">Circulando</div>
-            <div class="kpi-sub kpi-sub-spaced" id="nftStatusSub">
-              Bomba Principal: <span class="status-ok">Ligada</span>
-            </div>
+            <div class="kpi-sub kpi-sub-spaced" id="nftStatusSub">Bomba Principal: <span class="status-ok">Ligada</span></div>
           </div>
 
           <div class="card lighting-card" id="cardLighting">
-            <div class="kpi-header">
-              <span id="lightingHeader">Iluminação LED 6000K</span>
-              <i class="ph ph-sun-dim"></i>
-            </div>
-            <div id="lightingState">
-              <span class="light-state on">💡 Acesa</span>
-            </div>
-            <div class="kpi-sub" id="lightingSub">Potência: 100% | Ciclo: 16h/8h</div>
+            <div class="kpi-header"><span id="lightingHeader">Iluminacao LED 6000K</span><i class="ph ph-sun-dim"></i></div>
+            <div id="lightingState"><span class="light-state on">Acesa</span></div>
+            <div class="kpi-sub" id="lightingSub">Potencia: 100% | Ciclo: 16h/8h</div>
           </div>
+        </div>
 
-        </div><!-- /kpi-grid -->
-
-
-        <!-- Grid: gráfico + controles -->
         <div class="dashboard-grid">
-
           <div class="panel">
-            <div class="panel-title">
-              Histórico Ambiental (Temp / Umidade)
-              <button class="btn btn-primary" type="button" data-ui-action="download-csv">
-                <i class="ph ph-download-simple"></i> Exportar (RF10)
-              </button>
-            </div>
-            <div class="chart-container">
-              <canvas id="envChart"></canvas>
-            </div>
+            <div class="panel-title">Historico Ambiental (Temp / Umidade)<button class="btn btn-primary" type="button" data-ui-action="download-csv"><i class="ph ph-download-simple"></i> Exportar (RF10)</button></div>
+            <div class="chart-container"><canvas id="envChart"></canvas></div>
           </div>
 
           <div class="panel">
             <div class="panel-title">Controle e Ajustes</div>
             <div class="list-group">
-
-              <div class="list-item control-item-highlight">
-                <div class="item-info">
-                  <h4>Ajuste de pH (CU OPE 01)</h4>
-                  <p>Acionar bomba dosadora manualmente</p>
-                </div>
-                <button class="btn btn-action" type="button" data-ui-action="correct-ph">Injetar</button>
-              </div>
-
-              <div class="list-item">
-                <div class="item-info">
-                  <h4>Simular Falha NFT (RF07)</h4>
-                  <p>Testar alerta crítico do fluxo</p>
-                </div>
-                <button class="btn btn-danger" type="button" data-ui-action="simulate-nft-failure">Simular</button>
-              </div>
-
-              <div class="list-item">
-                <div class="item-info">
-                  <h4>Simular Lâmpada Queimada (RF02)</h4>
-                  <p>Testar detecção de falha luminosa</p>
-                </div>
-                <button class="btn btn-warning" type="button" data-ui-action="simulate-light-burn">Simular</button>
-              </div>
-
-              <div class="list-item">
-                <div class="item-info">
-                  <h4>Resfriamento</h4>
-                  <p>Controle térmico superior</p>
-                </div>
-                <span class="status-text status-danger" id="coolingStatus">Inativo</span>
-              </div>
-
-              <div class="list-item">
-                <div class="item-info">
-                  <h4>Aquecimento</h4>
-                  <p>Controle térmico inferior</p>
-                </div>
-                <span class="status-text status-danger" id="heatingStatus">Inativo</span>
-              </div>
-
-              <div class="list-item">
-                <div class="item-info">
-                  <h4>Módulos Físicos (RF06)</h4>
-                  <p>Torre A — 3 Módulos Empilhados</p>
-                </div>
-                <span class="badge-status active">Sincronizados</span>
-              </div>
-
+              <div class="list-item control-item-highlight"><div class="item-info"><h4>Ajuste de pH (CU OPE 01)</h4><p>Acionar bomba dosadora manualmente</p></div><button class="btn btn-action" type="button" data-ui-action="correct-ph">Injetar</button></div>
+              <div class="list-item"><div class="item-info"><h4>Simular Falha NFT (RF07)</h4><p>Testar alerta critico do fluxo</p></div><button class="btn btn-danger" type="button" data-ui-action="simulate-nft-failure">Simular</button></div>
+              <div class="list-item"><div class="item-info"><h4>Simular Lampada Queimada (RF02)</h4><p>Testar deteccao de falha luminosa</p></div><button class="btn btn-warning" type="button" data-ui-action="simulate-light-burn">Simular</button></div>
+              <div class="list-item"><div class="item-info"><h4>Resfriamento</h4><p>Controle termico superior</p></div><span class="status-text status-danger" id="coolingStatus">Inativo</span></div>
+              <div class="list-item"><div class="item-info"><h4>Aquecimento</h4><p>Controle termico inferior</p></div><span class="status-text status-danger" id="heatingStatus">Inativo</span></div>
+              <div class="list-item"><div class="item-info"><h4>Modulos Fisicos (RF06)</h4><p>Torre A - 3 Modulos Empilhados</p></div><span class="badge-status active">Sincronizados</span></div>
             </div>
           </div>
-
-        </div><!-- /dashboard-grid -->
-
-      </section><!-- /dashboard -->
-
-
-      <!-- ===== VIEW: INSUMOS (RF11) ===== -->
-      <section id="estoque" class="view-section">
-        <div class="panel">
-          <div class="panel-title">
-            Gestão de Insumos e Nutrientes
-            <button class="btn btn-action" type="button" data-ui-action="inventory-add">+ Novo Insumo</button>
-          </div>
-          <div id="inventoryList" class="list-group"></div>
         </div>
       </section>
 
+      <section id="estoque" class="view-section"><div class="panel"><div class="panel-title">Gestao de Insumos e Nutrientes<button class="btn btn-action" type="button" data-ui-action="inventory-add">+ Novo Insumo</button></div><div id="inventoryList" class="list-group"></div></div></section>
+      <section id="safras" class="view-section"><div class="panel"><div class="panel-title">Planejamento de Colheita<button class="btn btn-action" type="button" data-ui-action="harvest-add">+ Nova Safra</button></div><div id="harvestList" class="list-group"></div></div></section>
 
-      <!-- ===== VIEW: SAFRAS (RF04/RF05) ===== -->
-      <section id="safras" class="view-section">
-        <div class="panel">
-          <div class="panel-title">
-            Planejamento de Colheita
-            <button class="btn btn-action" type="button" data-ui-action="harvest-add">+ Nova Safra</button>
-          </div>
-          <div id="harvestList" class="list-group"></div>
-        </div>
-      </section>
-
-
-      <!-- ===== VIEW: LOG ===== -->
       <section id="log" class="view-section">
-
+        <div class="panel"><div class="panel-title">Status dos Modulos Fisicos</div><div id="moduleStatus" class="list-group"></div></div>
         <div class="panel">
-          <div class="panel-title">Status dos Módulos Físicos</div>
-          <div id="moduleStatus" class="list-group"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">Log de Eventos <span class="log-count-label" id="logCount"></span></div><div class="log-filters"><button data-log-filter="all" class="btn btn-primary">Todos</button><button data-log-filter="info" class="btn">Info</button><button data-log-filter="warn" class="btn">Warn</button><button data-log-filter="error" class="btn">Error</button><button data-log-filter="action" class="btn">Action</button></div>
+          <div class="panel-title">Log de Eventos <span class="log-count-label" id="logCount"></span></div>
+          <div class="log-filters"><button data-log-filter="all" class="btn btn-primary">Todos</button><button data-log-filter="info" class="btn">Info</button><button data-log-filter="warn" class="btn">Warn</button><button data-log-filter="error" class="btn">Error</button><button data-log-filter="action" class="btn">Action</button></div>
           <div id="logsContainer" class="list-group"></div>
         </div>
-
       </section>
 
-
-      <!-- ===== VIEW: AUTOMAÇÃO ===== -->
       <section id="automacao" class="view-section">
-
         <div class="auto-grid">
-
-          <!-- ——— PAINEL ESQUERDO: Alertas e Notificações ——— -->
           <div class="panel">
-            <div class="panel-title">Configurações de Alertas de Eventos</div>
-
-            <div class="auto-sub-title">Alertas e Notificações</div>
-
-            <div class="channel-row">
-              <span class="channel-label">Canal de Envio:</span>
-              <div class="channel-pills">
-                <label class="channel-pill">
-                  <input type="checkbox" id="chWpp" checked>
-                  <span>📱 WhatsApp</span>
-                </label>
-                <label class="channel-pill">
-                  <input type="checkbox" id="chTelegram">
-                  <span>✈️ Telegram</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="wpp-input-row">
-              <label class="form-label" for="wppNumber">Número WhatsApp (com DDD)</label>
-              <div class="wpp-input-group">
-                <i class="ph ph-phone"></i>
-                <input type="tel" id="wppNumber" placeholder="+55 (11) 91234-5678" class="form-input">
-                <button class="btn btn-action" type="button" data-ui-action="save-wpp">Salvar</button>
-              </div>
-            </div>
-
-            <div class="auto-sub-title" style="margin-top:1.25rem">Eventos que disparam notificação</div>
+            <div class="panel-title">Configuracoes de Alertas de Eventos</div>
+            <div class="auto-sub-title">Alertas e Notificacoes</div>
+            <div class="channel-row"><span class="channel-label">Canal de Envio:</span><div class="channel-pills"><label class="channel-pill"><input type="checkbox" id="chWpp" checked><span>WhatsApp</span></label><label class="channel-pill"><input type="checkbox" id="chTelegram"><span>Telegram</span></label></div></div>
+            <div class="wpp-input-row"><label class="form-label" for="wppNumber">Numero WhatsApp (com DDD)</label><div class="wpp-input-group"><i class="ph ph-phone"></i><input type="tel" id="wppNumber" placeholder="+55 (11) 91234-5678" class="form-input"><button class="btn btn-action" type="button" data-ui-action="save-wpp">Salvar</button></div></div>
+            <div class="auto-sub-title" style="margin-top:1.25rem">Eventos que disparam notificacao</div>
             <div class="alert-checks">
-              <label class="check-row">
-                <input type="checkbox" id="evtLed" checked>
-                <span class="evt-icon" style="background:#1c1b35">💡</span>
-                <span>LED Desligado</span>
-              </label>
-              <label class="check-row">
-                <input type="checkbox" id="evtTempBaixa">
-                <span class="evt-icon" style="background:#dbeafe">❄️</span>
-                <span>Temperatura Baixa</span>
-              </label>
-              <label class="check-row">
-                <input type="checkbox" id="evtTempAlta" checked>
-                <span class="evt-icon" style="background:#fee2e2">🌡️</span>
-                <span>Temperatura Alta</span>
-              </label>
-              <label class="check-row">
-                <input type="checkbox" id="evtNft" checked>
-                <span class="evt-icon" style="background:#dbeafe">💧</span>
-                <span>Fluxo NFT Interrompido</span>
-              </label>
-              <label class="check-row">
-                <input type="checkbox" id="evtPh">
-                <span class="evt-icon" style="background:#f3e8ff">⚗️</span>
-                <span>pH Fora da Faixa</span>
-              </label>
+              <label class="check-row"><input type="checkbox" id="evtLed" checked><span class="evt-icon" style="background:#1c1b35">💡</span><span>LED Desligado</span></label>
+              <label class="check-row"><input type="checkbox" id="evtTempBaixa"><span class="evt-icon" style="background:#dbeafe">❄️</span><span>Temperatura Baixa</span></label>
+              <label class="check-row"><input type="checkbox" id="evtTempAlta" checked><span class="evt-icon" style="background:#fee2e2">🌡️</span><span>Temperatura Alta</span></label>
+              <label class="check-row"><input type="checkbox" id="evtNft" checked><span class="evt-icon" style="background:#dbeafe">💧</span><span>Fluxo NFT Interrompido</span></label>
+              <label class="check-row"><input type="checkbox" id="evtPh"><span class="evt-icon" style="background:#f3e8ff">⚗️</span><span>pH Fora da Faixa</span></label>
             </div>
-
             <div class="auto-sub-title" style="margin-top:1.25rem">Configurar Timers do Sistema</div>
-            <div class="timer-row">
-              <label class="form-label" for="checkInterval">Intervalo de Verificação (Minutos)</label>
-              <div class="timer-input-group">
-                <input type="number" id="checkInterval" value="15" min="1" max="1440" class="form-input form-input-sm">
-                <button class="btn btn-primary" type="button" data-ui-action="save-interval">Aplicar</button>
+            <div class="timer-row"><label class="form-label" for="checkInterval">Intervalo de Verificacao (Minutos)</label><div class="timer-input-group"><input type="number" id="checkInterval" value="15" min="1" max="1440" class="form-input form-input-sm"><button class="btn btn-primary" type="button" data-ui-action="save-interval">Aplicar</button></div></div>
+
+            <div class="auto-sub-title" style="margin-top:1.25rem">Integracao de Hardware</div>
+            <div class="list-group">
+              <div class="list-item"><div class="item-info"><h4>Status da API</h4><p id="apiHealthText">Aguardando verificacao...</p></div><button class="btn btn-primary" type="button" data-ui-action="check-api-health">Verificar</button></div>
+              <div class="list-item"><div class="item-info"><h4>Polling ESP (device_id)</h4><p>Valida se o ESP esta buscando comandos na fila</p></div><div class="manual-control-fields"><input id="espDeviceId" class="form-input" type="text" placeholder="astro-verde-esp"><button class="btn btn-action" type="button" data-ui-action="check-esp-device">Consultar</button></div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="panel-title">Automacoes Manuais e Controles Manuais</div>
+              <div class="auto-sub-title">Painel de Controles Manuais</div>
+              <div class="manual-controls-grid" style="margin-bottom:1rem">
+                <div class="list-item manual-control-card"><div class="item-info"><h4>Fluxo Laminar</h4><p>Defina L/h manualmente</p></div><div class="manual-control-fields"><input id="inputFluxo" class="form-input" type="number" min="0" placeholder="L/h"><button id="btnSalvarFluxo" class="btn btn-action" type="button">Salvar</button></div></div>
+                <div class="list-item manual-control-card"><div class="item-info"><h4>Iluminacao</h4><p>Modo, intensidade e janela de horario</p></div><div class="manual-control-fields"><select id="inputLuzOn" class="form-select"><option value="on">Ligada</option><option value="off">Desligada</option></select><select id="inputLuzModo" class="form-select"><option value="manual">Manual</option><option value="automatico">Automatico</option></select><input id="inputLuzIntensidade" class="form-input" type="number" min="0" max="100" placeholder="Intensidade 0-100%"><div class="manual-time-grid"><input id="inputLuzInicio" class="form-input" type="time"><input id="inputLuzFim" class="form-input" type="time"></div><button id="btnSalvarLuz" class="btn btn-action" type="button">Salvar</button></div></div>
+              </div>
+
+              <div class="auto-sub-title">Controles Manuais de Automacao</div>
+              <div class="list-group" style="margin-bottom:1.5rem">
+                <div class="list-item"><div class="item-info"><h4>Override de Iluminacao</h4><p>Substitui o ciclo automatico LED</p></div><div class="toggle-mode" id="toggleLighting" title="Alternar modo"><span class="toggle-opt active-opt" data-side="manual">Manual</span><div class="toggle-track"><div class="toggle-thumb"></div></div><span class="toggle-opt" data-side="auto">Auto</span></div></div>
+                <div class="list-item"><div class="item-info"><h4>Override de Bomba</h4><p>Substitui o ciclo automatico de irrigacao</p></div><div class="toggle-mode" id="togglePump" title="Alternar modo"><span class="toggle-opt active-opt" data-side="manual">Manual</span><div class="toggle-track"><div class="toggle-thumb"></div></div><span class="toggle-opt" data-side="auto">Auto</span></div></div>
               </div>
             </div>
-          </div><!-- /painel esquerdo -->
 
-
-          <!-- ——— PAINEL DIREITO: Controles + Celular ——— -->
-          <div>
-
-            <!-- Controles Manuais -->
             <div class="panel">
-              <div class="panel-title">Automações Manuais e Controles Manuais</div>
-
-                            <div class="auto-sub-title">Painel de Controles Manuais</div>
-              <div class="manual-controls-grid" style="margin-bottom:1rem">
-                <div class="list-item manual-control-card">
-                  <div class="item-info">
-                    <h4>Fluxo Laminar</h4>
-                    <p>Defina L/h manualmente</p>
-                  </div>
-                  <div class="manual-control-fields">
-                    <input id="inputFluxo" class="form-input" type="number" min="0" placeholder="L/h">
-                    <button id="btnSalvarFluxo" class="btn btn-action" type="button">Salvar</button>
-                  </div>
-                </div>
-                <div class="list-item manual-control-card">
-                  <div class="item-info">
-                    <h4>Ilumina��o</h4>
-                    <p>Modo, intensidade e janela de hor�rio</p>
-                  </div>
-                  <div class="manual-control-fields">
-                    <select id="inputLuzOn" class="form-select">
-                      <option value="on">Ligada</option>
-                      <option value="off">Desligada</option>
-                    </select>
-                    <select id="inputLuzModo" class="form-select">
-                      <option value="manual">Manual</option>
-                      <option value="automatico">Autom�tico</option>
-                    </select>
-                    <input id="inputLuzIntensidade" class="form-input" type="number" min="0" max="100" placeholder="Intensidade 0-100%">
-                    <div class="manual-time-grid">
-                      <input id="inputLuzInicio" class="form-input" type="time">
-                      <input id="inputLuzFim" class="form-input" type="time">
-                    </div>
-                    <button id="btnSalvarLuz" class="btn btn-action" type="button">Salvar</button>
-                  </div>
-                </div>
-              </div>
-              <div class="auto-sub-title">Controles Manuais de Automa��o</div>
-              <div class="list-group" style="margin-bottom:1.5rem">
-                <div class="list-item">
-                  <div class="item-info">
-                    <h4>Override de Iluminação</h4>
-                    <p>Substitui o ciclo automático LED</p>
-                  </div>
-                  <div class="toggle-mode" id="toggleLighting" title="Alternar modo">
-                    <span class="toggle-opt active-opt" data-side="manual">Manual</span>
-                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                    <span class="toggle-opt" data-side="auto">Auto</span>
-                  </div>
-                </div>
-                <div class="list-item">
-                  <div class="item-info">
-                    <h4>Override de Bomba</h4>
-                    <p>Substitui o ciclo automático de irrigação</p>
-                  </div>
-                  <div class="toggle-mode" id="togglePump" title="Alternar modo">
-                    <span class="toggle-opt active-opt" data-side="manual">Manual</span>
-                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                    <span class="toggle-opt" data-side="auto">Auto</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="auto-sub-title">Configuração de Timers do Sistema</div>
-              <div class="cycle-header">
-                <span>Ciclo de Irrigação (Bomba)</span>
-                <span class="cycle-duration">Duração: <strong id="cycleHours">8h</strong></span>
-              </div>
-              <input type="range" id="cycleSlider" min="1" max="24" value="8" class="cycle-slider">
-              <div class="cycle-ticks" id="cycleTicks">
-                <span>0h</span><span>4h</span><span>8h</span>
-                <span>12h</span><span>16h</span><span>20h</span><span>24h</span>
-              </div>
-              <div class="cycle-timeline" id="cycleTimeline"></div>
-              <div class="cycle-info">
-                Início: <strong id="cycleStart">08:00</strong> &nbsp;|&nbsp;
-                Tempo Ligado: <strong id="cycleOn">8h</strong> &nbsp;|&nbsp;
-                Ciclo Total: <strong>24h</strong>
-              </div>
-            </div><!-- /Controles Manuais -->
-
-
-            <!-- Controle Direto via Celular -->
-            <div class="panel">
-              <div class="panel-title">
-                <span><i class="ph ph-device-mobile" style="margin-right:.35rem"></i>Controle Direto via Celular</span>
-              </div>
-
-              <div class="auto-sub-title">Ações Rápidas</div>
+              <div class="panel-title"><span><i class="ph ph-device-mobile" style="margin-right:.35rem"></i>Controle Direto via Celular</span></div>
+              <div class="auto-sub-title">Acoes Rapidas</div>
               <div class="mobile-actions-grid">
-                    <button class="mobile-cmd-btn cmd-pump-on" type="button" data-ui-action="cmd-pump-on">
-                  <i class="ph ph-drop-half"></i>
-                  <span>Ligar Bomba</span>
-                </button>
-                <button class="mobile-cmd-btn cmd-pump-off" type="button" data-ui-action="cmd-pump-off">
-                  <i class="ph ph-drop-slash"></i>
-                  <span>Desligar Bomba</span>
-                </button>
-                <button class="mobile-cmd-btn cmd-light-on" type="button" data-ui-action="cmd-light-on">
-                  <i class="ph ph-sun"></i>
-                  <span>Ligar LED</span>
-                </button>
-                <button class="mobile-cmd-btn cmd-light-off" type="button" data-ui-action="cmd-light-off">
-                  <i class="ph ph-moon"></i>
-                  <span>Desligar LED</span>
-                </button>
+                <button class="mobile-cmd-btn cmd-pump-on" type="button" data-ui-action="cmd-pump-on"><i class="ph ph-drop-half"></i><span>Ligar Bomba</span></button>
+                <button class="mobile-cmd-btn cmd-pump-off" type="button" data-ui-action="cmd-pump-off"><i class="ph ph-drop-slash"></i><span>Desligar Bomba</span></button>
+                <button class="mobile-cmd-btn cmd-light-on" type="button" data-ui-action="cmd-light-on"><i class="ph ph-sun"></i><span>Ligar LED</span></button>
+                <button class="mobile-cmd-btn cmd-light-off" type="button" data-ui-action="cmd-light-off"><i class="ph ph-moon"></i><span>Desligar LED</span></button>
               </div>
+              <div class="notif-test-row"><button class="btn btn-action btn-block" type="button" data-ui-action="send-test-notif"><i class="ph ph-paper-plane-tilt"></i>Enviar Notificacao de Teste</button></div>
+              <div class="notif-log-header">Historico de Envios</div>
+              <div class="notif-log" id="notifLog"><span class="notif-log-empty">Nenhuma notificacao enviada ainda.</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
 
-              <div class="notif-test-row">
-                <button class="btn btn-action btn-block" type="button" data-ui-action="send-test-notif">
-                  <i class="ph ph-paper-plane-tilt"></i>
-                  Enviar Notificação de Teste
-                </button>
-              </div>
-
-              <div class="notif-log-header">Histórico de Envios</div>
-              <div class="notif-log" id="notifLog">
-                <span class="notif-log-empty">Nenhuma notificação enviada ainda.</span>
-              </div>
-            </div><!-- /Controle via Celular -->
-
-          </div><!-- /coluna direita -->
-
-        </div><!-- /auto-grid -->
-
-      </section><!-- /automacao -->
-
-
-    </div><!-- /content-area -->
-  </main><!-- /main-wrapper -->
-
-
-  <!-- ============================================================
-       MODAL PRINCIPAL — feedback ao usuário
-  ============================================================ -->
   <div class="modal-overlay" id="customModal">
     <div class="modal-content">
       <i class="ph ph-warning-circle modal-icon warning" id="modalIcon"></i>
-      <h3 class="modal-title" id="modalTitle">Atenção</h3>
+      <h3 class="modal-title" id="modalTitle">Atencao</h3>
       <p class="modal-text" id="modalMessage">Mensagem aqui</p>
       <button class="btn btn-primary btn-full" type="button" data-ui-action="close-modal">Entendido</button>
     </div>
   </div>
 
-  <!-- ============================================================
-       MODAL DE FORMULÁRIO — cadastro de insumos e safras
-  ============================================================ -->
   <div class="modal-overlay" id="formModal">
     <div class="modal-content modal-content-form">
       <h3 class="modal-title form-modal-title" id="formModalTitle"></h3>
@@ -529,11 +206,6 @@
     </div>
   </div>
 
-
-  <!-- ============================================================
-       SCRIPTS — carregados no fim do body
-       Ordem obrigatória: state → alertas → logs → módulos → main
-  ============================================================ -->
   <script src="assets/js/state.js"></script>
   <script src="assets/js/modules/alerts.js"></script>
   <script src="assets/js/modules/automation.js"></script>
@@ -547,14 +219,11 @@
   <script src="assets/js/constants/api.js"></script>
   <script src="assets/js/utils/http.js"></script>
   <script src="assets/js/services/api.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.SUPABASE_URL = ""; window.SUPABASE_ANON_KEY = "";</script><script src="assets/js/main.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = "";
+    window.SUPABASE_ANON_KEY = "";
+  </script>
+  <script src="assets/js/main.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
