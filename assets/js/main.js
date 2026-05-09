@@ -85,4 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => ApiService.syncState(), 10000);
   bindRealtime();
   Logger.render();
+  const statusEl = document.getElementById('sysStatusText');
+  if (statusEl) statusEl.textContent = AppState.dataSource === 'api' ? 'Modo Produção Ativo' : 'Modo Mock Ativo';
 });

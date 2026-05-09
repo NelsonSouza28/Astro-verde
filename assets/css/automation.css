@@ -459,6 +459,10 @@
   width: min(360px, 100%);
 }
 
+.manual-control-fields .btn {
+  width: 100%;
+}
+
 .manual-time-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

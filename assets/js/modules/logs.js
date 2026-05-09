@@ -24,6 +24,9 @@ const Logger = {
     document.querySelectorAll('[data-log-filter]').forEach((btn) => {
       btn.onclick = () => {
         AppState.liveLogsFilter = btn.dataset.logFilter;
+        document.querySelectorAll('[data-log-filter]').forEach((item) => {
+          item.classList.toggle('btn-primary', item.dataset.logFilter === AppState.liveLogsFilter);
+        });
         this._renderLogEntries();
       };
     });

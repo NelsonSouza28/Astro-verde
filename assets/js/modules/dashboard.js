@@ -38,7 +38,7 @@ const Dashboard = {
       const stampEl = document.getElementById(timestampId);
       if (stampEl) {
         const last = AppState.sensorMeta[sensorKey]?.lastReadingAt;
-        stampEl.textContent = last ? `Ultima leitura: ${new Date(last).toLocaleTimeString('pt-BR')}` : 'Ultima leitura: -';
+        stampEl.textContent = last ? `Última leitura: ${new Date(last).toLocaleTimeString('pt-BR')}` : 'Última leitura: -';
       }
     }
   },
@@ -82,8 +82,8 @@ const Dashboard = {
     this._setHeaderBadge('tempHeader', 'temperature');
     const temp = AppState.sensors.temperature;
     const cfg = AppState.config.temperature;
-    el.textContent = `${temp.toFixed(1)}C`;
-    status.textContent = temp > cfg.max || temp < cfg.min ? 'Fora da faixa' : `Ideal (${cfg.min}-${cfg.max}C)`;
+    el.textContent = `${temp.toFixed(1)}°C`;
+    status.textContent = temp > cfg.max || temp < cfg.min ? 'Fora da faixa' : `Ideal (${cfg.min}-${cfg.max}°C)`;
     status.className = temp > cfg.max || temp < cfg.min ? 'status-text status-alert' : 'status-text status-ok';
   },
 
@@ -105,7 +105,7 @@ const Dashboard = {
     const state = AppState.actuators.lightingState;
     const power = AppState.actuators.lightingPower;
     stateEl.innerHTML = `<span class="light-state ${state === 'acesa' ? 'on' : 'off'}">${state === 'acesa' ? 'Acesa' : 'Apagada'}</span>`;
-    if (subEl) subEl.textContent = `Potencia: ${power}%`;
+    if (subEl) subEl.textContent = `Potência: ${power}%`;
   },
 
   _updateWaterLevel() {

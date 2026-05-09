@@ -32,6 +32,12 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(9, 16, 22, 0.08);
 }
 
 /* Barra colorida à esquerda do card — indica estado */
@@ -107,6 +113,11 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
   border: 1px solid rgba(0, 0, 0, 0.05);
   margin-bottom: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.panel:hover {
+  box-shadow: 0 10px 22px rgba(9, 16, 22, 0.06);
 }
 
 /* Título do painel com espaço para botão de ação à direita */
@@ -222,6 +233,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
+  min-height: 40px;
 }
 
 /* Botão primário — escuro, para ações principais */
@@ -523,7 +535,8 @@
 }
 
 .badge-status.info { background: #dbeafe; color: #1e3a8a; }
-.log-filters { display:flex; gap:.5rem; margin-bottom:.75rem; flex-wrap:wrap; }`r`n.log-filters .btn { border: 1px solid var(--border-glow); }
+.log-filters { display:flex; gap:.5rem; margin-bottom:.75rem; flex-wrap:wrap; }
+.log-filters .btn { border: 1px solid var(--border-glow); }
 #logsContainer { max-height: 420px; overflow-y: auto; background:#080b12; border-radius:8px; padding:.75rem; }
 .live-log-line { font-family: monospace; font-size:.82rem; padding:.2rem 0; }
 .log-info { color: #ffffff; }
