@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module dashboard
  * @description Render de cards com origem REAL/SIM/OFFLINE e timestamps de leitura.
  * @hardware esp32/esp8266
@@ -38,7 +38,7 @@ const Dashboard = {
       const stampEl = document.getElementById(timestampId);
       if (stampEl) {
         const last = AppState.sensorMeta[sensorKey]?.lastReadingAt;
-        stampEl.textContent = last ? `Última leitura: ${new Date(last).toLocaleTimeString('pt-BR')}` : 'Última leitura: -';
+        stampEl.textContent = last ? `Ultima leitura: ${new Date(last).toLocaleTimeString('pt-BR')}` : 'Ultima leitura: -';
       }
     }
   },
@@ -105,7 +105,7 @@ const Dashboard = {
     const state = AppState.actuators.lightingState;
     const power = AppState.actuators.lightingPower;
     stateEl.innerHTML = `<span class="light-state ${state === 'acesa' ? 'on' : 'off'}">${state === 'acesa' ? 'Acesa' : 'Apagada'}</span>`;
-    if (subEl) subEl.textContent = `Potência: ${power}%`;
+    if (subEl) subEl.textContent = `Potencia: ${power}%`;
   },
 
   _updateWaterLevel() {
