@@ -1,29 +1,39 @@
-/*
- * modules/inventory.js - Gestão de Insumos (RF11)
- *
- * O HTML gerado usa apenas classes e data-attributes,
- * mantendo CSS e eventos fora do markup.
+/**
+ * @file inventory.js
+ * @module inventory
+ * @description Gestao de insumos com modo consulta para Visualizador e edicao para Operador/Administrador.
+ * @requisitos RF11, RN09, RN05
+ * @ator Administrador, Operador, Visualizador
+ * @mode real
  */
 
 const Inventory = {
-
   items: [
-    { id: 1, name: 'Solução Nutritiva A (Macronutrientes)', quantity: 15, unit: 'L', minStock: 5 },
-    { id: 2, name: 'Solução Nutritiva B (Micronutrientes)', quantity: 12, unit: 'L', minStock: 5 },
-    { id: 3, name: 'Solução Redutora de pH', quantity: 2, unit: 'L', minStock: 3 },
+    { id: 1, name: 'Solucao Nutritiva A (Macronutrientes)', quantity: 15, unit: 'L', minStock: 5 },
+    { id: 2, name: 'Solucao Nutritiva B (Micronutrientes)', quantity: 12, unit: 'L', minStock: 5 },
+    { id: 3, name: 'Solucao Redutora de pH', quantity: 2, unit: 'L', minStock: 3 },
     { id: 4, name: 'Sementes - Alface Crespa', quantity: 5000, unit: 'un', minStock: 1000 },
   ],
 
   _nextId: 5,
+
+  _canEdit() {
+    return (typeof Auth !== 'undefined') ? Auth.isOperadorOuAdmin() : true;
+  },
 
   init() {
     const container = document.getElementById('inventoryList');
     if (!container || container.dataset.bound === 'true') return;
 
     container.dataset.bound = 'true';
-    container.addEventListener('click', event => {
+    container.addEventListener('click', (event) => {
       const button = event.target.closest('[data-inventory-action]');
       if (!button) return;
+
+      if (!this._canEdit()) {
+        Modal.show('Acesso restrito', 'Visualizador pode apenas consultar o estoque.', 'warning');
+        return;
+      }
 
       const itemId = Number(button.dataset.id);
       if (button.dataset.inventoryAction === 'edit') this.openEditForm(itemId);
@@ -40,22 +50,21 @@ const Inventory = {
       return;
     }
 
+    const canEdit = this._canEdit();
     container.innerHTML = '';
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       const isLow = item.quantity <= item.minStock;
       const div = document.createElement('div');
       div.className = `list-item${isLow ? ' list-item-warning' : ''}`;
       div.innerHTML = `
         <div class="item-info">
           <h4>${item.name}</h4>
-          <p>Quantidade: ${item.quantity} ${item.unit} &nbsp;|&nbsp; Mínimo: ${item.minStock} ${item.unit}</p>
+          <p>Quantidade: ${item.quantity} ${item.unit} | Minimo: ${item.minStock} ${item.unit}</p>
         </div>
         <div class="item-actions">
-          <span class="badge-status ${isLow ? 'warning' : 'active'}">
-            ${isLow ? 'Estoque Baixo' : 'Estoque OK'}
-          </span>
-          <button class="btn btn-primary btn-sm" type="button" data-inventory-action="edit" data-id="${item.id}">Editar</button>
-          <button class="btn btn-danger btn-sm" type="button" data-inventory-action="remove" data-id="${item.id}">Remover</button>
+          <span class="badge-status ${isLow ? 'warning' : 'active'}">${isLow ? 'Estoque Baixo' : 'Estoque OK'}</span>
+          ${canEdit ? `<button class="btn btn-primary btn-sm" type="button" data-inventory-action="edit" data-id="${item.id}">Editar</button>
+          <button class="btn btn-danger btn-sm" type="button" data-inventory-action="remove" data-id="${item.id}">Remover</button>` : ''}
         </div>
       `;
       container.appendChild(div);
@@ -63,12 +72,17 @@ const Inventory = {
   },
 
   openAddForm() {
+    if (!this._canEdit()) {
+      Modal.show('Acesso restrito', 'Visualizador pode apenas consultar o estoque.', 'warning');
+      return;
+    }
+
     document.getElementById('formModalTitle').textContent = 'Novo Insumo';
     document.getElementById('formModalBody').innerHTML = `
       <div class="form-grid">
         <div class="form-field">
           <label class="form-label">Nome do Insumo</label>
-          <input id="fi_name" class="form-input" type="text" placeholder="Ex: Solução Nutritiva A">
+          <input id="fi_name" class="form-input" type="text" placeholder="Ex: Solucao Nutritiva A">
         </div>
         <div class="form-row-2">
           <div class="form-field">
@@ -87,7 +101,7 @@ const Inventory = {
           </div>
         </div>
         <div class="form-field">
-          <label class="form-label">Estoque Mínimo (alerta abaixo disso)</label>
+          <label class="form-label">Estoque Minimo (alerta abaixo disso)</label>
           <input id="fi_min" class="form-input" type="number" min="0" placeholder="0">
         </div>
       </div>
@@ -100,12 +114,12 @@ const Inventory = {
       const min = parseFloat(document.getElementById('fi_min').value) || 0;
 
       if (!name) {
-        alert('Informe o nome do insumo.');
+        Modal.show('Campo obrigatorio', 'Informe o nome do insumo.', 'warning');
         return;
       }
 
-      if (isNaN(qty) || qty < 0) {
-        alert('Informe uma quantidade válida.');
+      if (Number.isNaN(qty) || qty < 0) {
+        Modal.show('Valor invalido', 'Informe uma quantidade valida.', 'warning');
         return;
       }
 
@@ -119,7 +133,12 @@ const Inventory = {
   },
 
   openEditForm(id) {
-    const item = this.items.find(entry => entry.id === id);
+    if (!this._canEdit()) {
+      Modal.show('Acesso restrito', 'Visualizador pode apenas consultar o estoque.', 'warning');
+      return;
+    }
+
+    const item = this.items.find((entry) => entry.id === id);
     if (!item) return;
 
     document.getElementById('formModalTitle').textContent = 'Editar Insumo';
@@ -140,7 +159,7 @@ const Inventory = {
           </div>
         </div>
         <div class="form-field">
-          <label class="form-label">Estoque Mínimo</label>
+          <label class="form-label">Estoque Minimo</label>
           <input id="fi_min" class="form-input" type="number" min="0" value="${item.minStock}">
         </div>
       </div>
@@ -153,12 +172,12 @@ const Inventory = {
       const min = parseFloat(document.getElementById('fi_min').value) || 0;
 
       if (!name) {
-        alert('Informe o nome.');
+        Modal.show('Campo obrigatorio', 'Informe o nome.', 'warning');
         return;
       }
 
-      if (isNaN(qty) || qty < 0) {
-        alert('Informe uma quantidade válida.');
+      if (Number.isNaN(qty) || qty < 0) {
+        Modal.show('Valor invalido', 'Informe uma quantidade valida.', 'warning');
         return;
       }
 
@@ -176,11 +195,16 @@ const Inventory = {
   },
 
   remove(id) {
-    const item = this.items.find(entry => entry.id === id);
+    if (!this._canEdit()) {
+      Modal.show('Acesso restrito', 'Visualizador pode apenas consultar o estoque.', 'warning');
+      return;
+    }
+
+    const item = this.items.find((entry) => entry.id === id);
     if (!item) return;
     if (!confirm(`Remover "${item.name}"?`)) return;
 
-    this.items = this.items.filter(entry => entry.id !== id);
+    this.items = this.items.filter((entry) => entry.id !== id);
     Logger.add('warning', 'Insumo Removido', `${item.name} removido do estoque.`);
     this.render();
   },

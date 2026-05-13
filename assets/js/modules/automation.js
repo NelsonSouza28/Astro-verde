@@ -9,6 +9,10 @@ const Automation = {
   _isBound: false,
   _saving: { fluxo: false, luz: false },
 
+  _canEdit() {
+    return (typeof Auth !== 'undefined') ? Auth.isOperadorOuAdmin() : true;
+  },
+
   init() {
     if (!this._isBound) {
       this._bindActions();
@@ -18,6 +22,10 @@ const Automation = {
 
   _bindActions() {
     document.getElementById('btnSalvarFluxo')?.addEventListener('click', async () => {
+      if (!this._canEdit()) {
+        Modal.show('Acesso restrito', 'Visualizador pode apenas acompanhar o status.', 'warning');
+        return;
+      }
       if (this._saving.fluxo) return;
       const input = document.getElementById('inputFluxo');
       const button = document.getElementById('btnSalvarFluxo');
@@ -47,6 +55,10 @@ const Automation = {
     });
 
     document.getElementById('btnSalvarLuz')?.addEventListener('click', async () => {
+      if (!this._canEdit()) {
+        Modal.show('Acesso restrito', 'Visualizador pode apenas acompanhar o status.', 'warning');
+        return;
+      }
       if (this._saving.luz) return;
       const button = document.getElementById('btnSalvarLuz');
       const payload = {

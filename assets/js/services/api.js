@@ -28,33 +28,70 @@ const ApiService = {
     });
     return this._extractData(payload);
   },
+  async _patch(path, body = {}) {
+    const payload = await HttpClient.request(this._url(path), {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    return this._extractData(payload);
+  },
 
   getSensors() { return this._get('sensorsLatest'); },
-  getSystemState() { return this._get('systemState'); },
   getAlerts() { return this._get('alerts'); },
   getLogs(limit = 50) { return this._get(`logs?limit=${limit}`); },
-  setLighting(command, power = 100) { return this._post('lighting', { command, power }); },
-  setPumpState(ligar) { return this._post('controlPump', { ligar }); },
-  setSystemMode(modo) { return this._post('mode', { modo }); },
-  sendPhReading(ph, deviceId) { return this._post('sensorPh', { ph, deviceId }); },
   setFluxo(valor) { return this._post('setFluxo', { valor }); },
   setLuz(payload) { return this._post('setLuz', payload); },
+  listUsers() { return this._get('users'); },
+  createUser(payload) { return this._post('users', payload); },
+  updateUserRole(id, perfil) { return this._patch(`/users/${id}/perfil`, { perfil }); },
 
   async syncState() {
     try {
-      const [sensorData, systemData] = await Promise.all([this.getSensors(), this.getSystemState()]);
+      const sensorData = await this.getSensors();
       if (sensorData?.sensors) Object.assign(AppState.sensors, sensorData.sensors);
-      if (sensorData?.actuators) Object.assign(AppState.actuators, sensorData.actuators);
-      if (systemData) {
-        AppState.system.phAtual = systemData.ph;
-        AppState.system.bombaLigada = systemData.bomba;
-        AppState.system.modoAtual = systemData.modo;
-        AppState.system.origemLeitura = systemData.origemLeitura;
-        AppState.system.ultimaAtualizacao = systemData.ultimaAtualizacao;
+      if (sensorData?.timestamp) {
+        AppState.system.ultimaAtualizacao = sensorData.timestamp;
       }
+      AppState.system.modoAtual = 'real';
+      AppState.system.origemLeitura = 'hardware';
       Dashboard.refresh();
     } catch (err) {
       console.warn('[API] Falha na sincronizacao:', err.message);
+    }
+  },
+
+  async syncLogs(limit = 80) {
+    try {
+      const data = await this.getLogs(limit);
+      if (!data?.logs) return;
+      AppState.logs = data.logs.map((row) => ({
+        type: row.level || 'info',
+        title: row.category || 'system',
+        category: row.category || 'system',
+        message: row.message || '',
+        timestamp: row.created_at || new Date().toISOString(),
+      }));
+      Logger.render();
+    } catch (err) {
+      console.warn('[API] Falha ao carregar logs:', err.message);
+    }
+  },
+
+  async syncAlerts() {
+    try {
+      const data = await this.getAlerts();
+      if (!data?.alerts) return;
+      AppState.alerts = data.alerts.map((row) => ({
+        id: row.tipo || row.id,
+        type: row.critica ? 'critical' : ((row.severidade || '').toLowerCase().includes('crit') ? 'critical' : 'warning'),
+        title: row.tipo || 'Alerta',
+        message: row.mensagem || '',
+        timestamp: new Date(row.aberto_em || row.created_at || Date.now()).toLocaleString('pt-BR'),
+        active: !row.resolvido_em,
+      }));
+      AppState.unreadNotifications = AppState.alerts.length;
+      Alerts.render();
+    } catch (err) {
+      console.warn('[API] Falha ao carregar alertas:', err.message);
     }
   },
 };

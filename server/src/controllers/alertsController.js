@@ -9,9 +9,9 @@ const { sendSuccess, sendError } = require('../utils/httpResponse');
 function makeAlertsController(alertsRepo) {
   return {
     /* GET /api/alerts - retorna apenas alertas ativos. */
-    getActive(req, res) {
+    async getActive(req, res) {
       try {
-        const alerts = alertsRepo.getActive();
+        const alerts = await alertsRepo.getActive();
         return sendSuccess(res, 'Alertas ativos carregados.', {
           alerts,
           count: alerts.length,
@@ -22,10 +22,10 @@ function makeAlertsController(alertsRepo) {
     },
 
     /* GET /api/alerts/history - retorna historico de alertas. */
-    getHistory(req, res) {
+    async getHistory(req, res) {
       try {
         const limit = parseInt(req.query.limit, 10) || 100;
-        const alerts = alertsRepo.getAll(limit);
+        const alerts = await alertsRepo.getAll(limit);
         return sendSuccess(res, 'Historico de alertas carregado.', { alerts });
       } catch (err) {
         return sendError(res, err.message, 500);
@@ -33,9 +33,9 @@ function makeAlertsController(alertsRepo) {
     },
 
     /* POST /api/alerts/:type/resolve - marca alerta como resolvido. */
-    resolve(req, res) {
+    async resolve(req, res) {
       try {
-        alertsRepo.resolve(req.params.type);
+        await alertsRepo.resolve(req.params.type);
         return sendSuccess(res, 'Alerta resolvido com sucesso.', {
           resolved: true,
           alertType: req.params.type,

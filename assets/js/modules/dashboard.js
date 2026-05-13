@@ -19,12 +19,13 @@ const Dashboard = {
   },
 
   _badge(sensorKey) {
-    const meta = AppState.sensorMeta[sensorKey] || { mode: 'simulated', lastReadingAt: null };
+    const meta = AppState.sensorMeta[sensorKey] || { mode: 'real', lastReadingAt: null };
     const created = meta.lastReadingAt ? new Date(meta.lastReadingAt) : null;
+    if (!created) return '<span class="badge-status warning">AGUARDANDO SENSOR</span>';
     const offline = created ? (Date.now() - created.getTime()) > 60000 : false;
     if (offline) return '<span class="badge-status danger">OFFLINE</span>';
-    if (meta.mode === 'real') return '<span class="badge-status active">REAL</span>';
-    return '<span class="badge-status info">SIMULADO</span>';
+    if (meta.mode === 'editable') return '<span class="badge-status info">EDITAVEL</span>';
+    return '<span class="badge-status active">REAL</span>';
   },
 
   _setHeaderBadge(headerId, sensorKey, timestampId) {
@@ -38,7 +39,7 @@ const Dashboard = {
       const stampEl = document.getElementById(timestampId);
       if (stampEl) {
         const last = AppState.sensorMeta[sensorKey]?.lastReadingAt;
-        stampEl.textContent = last ? `Ultima leitura: ${new Date(last).toLocaleTimeString('pt-BR')}` : 'Ultima leitura: -';
+        stampEl.textContent = last ? `Ultima leitura: ${new Date(last).toLocaleTimeString('pt-BR')}` : 'Aguardando leitura real do sensor';
       }
     }
   },
@@ -52,6 +53,14 @@ const Dashboard = {
     this._setHeaderBadge('phHeader', 'ph', 'phTimestamp');
     const ph = AppState.sensors.ph;
     const cfg = AppState.config.ph;
+    if (!Number.isFinite(ph)) {
+      el.textContent = '--';
+      status.textContent = 'AGUARDANDO SENSOR';
+      status.className = 'status-text status-alert';
+      card.classList.remove('danger');
+      card.classList.add('warning');
+      return;
+    }
     el.textContent = ph.toFixed(1);
 
     if (ph < cfg.min || ph > cfg.max) {
@@ -71,8 +80,13 @@ const Dashboard = {
     const tdsEl = document.getElementById('tdsValue');
     if (!ecEl) return;
     this._setHeaderBadge('ecHeader', 'ec');
+    if (!Number.isFinite(AppState.sensors.ec)) {
+      ecEl.textContent = '--';
+      if (tdsEl) tdsEl.textContent = '--';
+      return;
+    }
     ecEl.textContent = AppState.sensors.ec.toFixed(2);
-    if (tdsEl) tdsEl.textContent = AppState.sensors.tds;
+    if (tdsEl) tdsEl.textContent = Number.isFinite(AppState.sensors.tds) ? AppState.sensors.tds : Math.round(AppState.sensors.ec * 500);
   },
 
   _updateTemperature() {
@@ -82,6 +96,12 @@ const Dashboard = {
     this._setHeaderBadge('tempHeader', 'temperature');
     const temp = AppState.sensors.temperature;
     const cfg = AppState.config.temperature;
+    if (!Number.isFinite(temp)) {
+      el.textContent = '--';
+      status.textContent = 'AGUARDANDO SENSOR';
+      status.className = 'status-text status-alert';
+      return;
+    }
     el.textContent = `${temp.toFixed(1)}°C`;
     status.textContent = temp > cfg.max || temp < cfg.min ? 'Fora da faixa' : `Ideal (${cfg.min}-${cfg.max}°C)`;
     status.className = temp > cfg.max || temp < cfg.min ? 'status-text status-alert' : 'status-text status-ok';
@@ -91,7 +111,14 @@ const Dashboard = {
     const valEl = document.getElementById('nftStatusVal');
     const subEl = document.getElementById('nftStatusSub');
     if (!valEl) return;
-    this._setHeaderBadge('nftHeader', 'fluxo_laminar');
+    this._setHeaderBadge('nftHeader', 'fluxo_nft');
+    valEl.classList.remove('status-alert', 'status-danger');
+    if (AppState.sensors.nftFlow === null) {
+      valEl.textContent = 'AGUARDANDO SENSOR';
+      valEl.classList.add('status-alert');
+      if (subEl) subEl.innerHTML = 'Bomba Principal: <span class="status-alert">Sem leitura</span>';
+      return;
+    }
     valEl.textContent = AppState.sensors.nftFlow ? 'Circulando' : 'INTERROMPIDO';
     valEl.classList.toggle('status-danger', !AppState.sensors.nftFlow);
     if (subEl) subEl.innerHTML = AppState.sensors.nftFlow ? 'Bomba Principal: <span class="status-ok">Ligada</span>' : 'Bomba Principal: <span class="status-danger">Falha Critica</span>';
@@ -102,8 +129,14 @@ const Dashboard = {
     const subEl = document.getElementById('lightingSub');
     if (!stateEl) return;
     this._setHeaderBadge('lightingHeader', 'iluminacao');
-    const state = AppState.actuators.lightingState;
-    const power = AppState.actuators.lightingPower;
+    const reading = AppState.sensors.iluminacao;
+    const state = reading?.on === false ? 'apagada' : (reading?.on === true ? 'acesa' : AppState.actuators.lightingState);
+    const power = Number.isFinite(reading?.intensidade) ? reading.intensidade : AppState.actuators.lightingPower;
+    if (!reading && !AppState.sensorMeta.iluminacao?.lastReadingAt) {
+      stateEl.innerHTML = '<span class="light-state off">AGUARDANDO SENSOR</span>';
+      if (subEl) subEl.textContent = 'Aguardando leitura real da iluminacao';
+      return;
+    }
     stateEl.innerHTML = `<span class="light-state ${state === 'acesa' ? 'on' : 'off'}">${state === 'acesa' ? 'Acesa' : 'Apagada'}</span>`;
     if (subEl) subEl.textContent = `Potencia: ${power}%`;
   },
@@ -112,7 +145,10 @@ const Dashboard = {
     const el = document.getElementById('waterLevel');
     if (!el) return;
     this._setHeaderBadge('waterHeader', 'nivel_reservatorio', 'waterTimestamp');
-    el.textContent = `${Number(AppState.sensors.nivel_reservatorio || AppState.sensors.waterLevel).toFixed(1)}%`;
+    const nivel = Number.isFinite(AppState.sensors.nivel_reservatorio)
+      ? AppState.sensors.nivel_reservatorio
+      : (Number.isFinite(AppState.sensors.waterLevel) ? AppState.sensors.waterLevel : null);
+    el.textContent = Number.isFinite(nivel) ? `${Number(nivel).toFixed(1)}%` : '--';
   },
 
   _updateActuatorIndicators() {

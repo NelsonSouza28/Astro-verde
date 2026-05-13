@@ -1,16 +1,37 @@
-/*
- * repositories/logsRepository.js — Acesso ao Log do Sistema
+/**
+ * @file logsRepository.js
+ * @module logsRepository
+ * @description Acesso ao log operacional no Supabase.
+ * @requisitos RF10
+ * @ator Sistema
+ * @mode real
  */
 
-function makeLogsRepository(db) {
+function makeLogsRepository(supabase) {
   return {
-
-    getRecent(limit = 50) {
-      return db.findAll('system_logs', limit);
+    async getRecent(limit = 50) {
+      const { data, error } = await supabase
+        .from('system_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw new Error(error.message);
+      return data || [];
     },
 
-    insert(logType, title, message) {
-      return db.insert('system_logs', { log_type: logType, title, message });
+    async insert(level, category, message) {
+      const { data, error } = await supabase
+        .from('system_logs')
+        .insert({
+          level,
+          category,
+          message,
+          metadata: null,
+        })
+        .select()
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data || null;
     },
   };
 }

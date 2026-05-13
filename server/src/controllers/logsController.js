@@ -9,10 +9,10 @@ const { sendSuccess, sendError } = require('../utils/httpResponse');
 function makeLogsController(logsRepo) {
   return {
     /* GET /api/logs - lista logs recentes do sistema. */
-    getRecent(req, res) {
+    async getRecent(req, res) {
       try {
         const limit = parseInt(req.query.limit, 10) || 50;
-        const logs = logsRepo.getRecent(limit);
+        const logs = await logsRepo.getRecent(limit);
         return sendSuccess(res, 'Logs carregados com sucesso.', { logs });
       } catch (err) {
         return sendError(res, err.message, 500);

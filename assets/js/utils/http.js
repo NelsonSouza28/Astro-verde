@@ -11,7 +11,12 @@ const HttpClient = {
    * Lanca erro padronizado se o status HTTP nao for 2xx.
    */
   async request(url, options = {}) {
-    const response = await fetch(url, options);
+    const headers = { ...(options.headers || {}) };
+    if (AppState?.auth?.accessToken && !headers.Authorization) {
+      headers.Authorization = `Bearer ${AppState.auth.accessToken}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
 
     let payload = null;
     const isJson = (response.headers.get('content-type') || '').includes('application/json');

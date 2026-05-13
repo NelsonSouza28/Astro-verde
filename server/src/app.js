@@ -1,43 +1,46 @@
 /**
+ * @file app.js
  * @module app
- * @description Configuracao Express com bridge ESP, controles editaveis e integracao Supabase.
- * @hardware esp32/esp8266
+ * @description API principal em modo producao real com Supabase e bridge ESP32.
+ * @requisitos RF01, RF02, RF03, RF07, RF08, RF09, RF10, RF12, RF13, RN06, RN07, RNF13
+ * @ator Sistema
  * @mode real
  */
 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-
 const config = require('./config');
-const { initDatabase } = require('./database/seed');
-const makeSensorsRepository = require('./repositories/sensorsRepository');
-const makeAlertsRepository = require('./repositories/alertsRepository');
-const makeLogsRepository = require('./repositories/logsRepository');
-const makeSensorsService = require('./services/sensorsService');
-const makeActuatorsService = require('./services/actuatorsService');
-const makeSystemService = require('./services/systemService');
-const makeSensorsController = require('./controllers/sensorsController');
-const makeAlertsController = require('./controllers/alertsController');
-const makeActuatorsController = require('./controllers/actuatorsController');
-const makeLogsController = require('./controllers/logsController');
-const makeSystemController = require('./controllers/systemController');
-const makeSensorsRouter = require('./routes/sensors.routes');
-const makeAlertsRouter = require('./routes/alerts.routes');
-const makeActuatorsRouter = require('./routes/actuators.routes');
-const makeLogsRouter = require('./routes/logs.routes');
-const makeSystemRouter = require('./routes/system.routes');
-const makeEspRouter = require('./routes/esp.routes');
-const makeEspController = require('./controllers/espController');
+const { getSupabase } = require('./integrations/supabase');
+const { sendSuccess, sendError } = require('./utils/httpResponse');
+const { autenticar } = require('./middlewares/authz');
+const logger = require('./services/logger');
+const makeAlertasService = require('./services/alertas.service');
+
 const makeEspService = require('./services/espService');
+const makeEspController = require('./controllers/espController');
+const makeEspRouter = require('./routes/esp.routes');
+
+const makeSensorsRepository = require('./repositories/sensorsRepository');
+const makeSensorsService = require('./services/sensorsService');
+const makeSensorsController = require('./controllers/sensorsController');
+const makeSensorsRouter = require('./routes/sensors.routes');
+
+const makeAlertsRepository = require('./repositories/alertsRepository');
+const makeAlertsController = require('./controllers/alertsController');
+const makeAlertsRouter = require('./routes/alerts.routes');
+
+const makeLogsRepository = require('./repositories/logsRepository');
+const makeLogsController = require('./controllers/logsController');
+const makeLogsRouter = require('./routes/logs.routes');
+
 const makeManualControlsService = require('./services/manualControlsService');
 const makeManualControlsController = require('./controllers/manualControlsController');
 const makeManualControlsRouter = require('./routes/manual-controls.routes');
-const { getSupabase } = require('./integrations/supabase');
-const logger = require('./services/logger');
-const { sendSuccess } = require('./utils/httpResponse');
 
-const systemState = require('./state/systemState');
+const makeUsersService = require('./services/usersService');
+const makeUsersController = require('./controllers/usersController');
+const makeUsersRouter = require('./routes/users.routes');
 
 function createApp() {
   const app = express();
@@ -47,56 +50,47 @@ function createApp() {
   const frontendPath = path.resolve(__dirname, '../../');
   app.use(express.static(frontendPath));
 
-  const db = initDatabase();
-  const sensorsRepo = makeSensorsRepository(db);
-  const alertsRepo = makeAlertsRepository(db);
-  const logsRepo = makeLogsRepository(db);
+  app.get('/api', (req, res) => sendSuccess(res, 'API Astro Verde online.', { status: 'online' }));
+  app.get('/api/health', (req, res) => sendSuccess(res, 'Servico online.', { status: 'ok', mode: 'real' }));
 
+  const supabase = getSupabase();
+  if (!supabase) {
+    app.get('/api/auth/me', (req, res) => sendError(res, 'Supabase nao configurado no backend.', 500));
+    app.use('/api', (req, res) => sendError(res, 'Supabase nao configurado no backend.', 500));
+    app.use((req, res) => res.sendFile(path.join(frontendPath, 'index.html')));
+    return app;
+  }
+
+  const alertasService = makeAlertasService({ supabase, logger, config });
+  const espService = makeEspService({ supabase, logger, alertasService });
+  const espCtrl = makeEspController(espService);
+
+  const sensorsRepo = makeSensorsRepository(supabase);
+  const alertsRepo = makeAlertsRepository(supabase);
+  const logsRepo = makeLogsRepository(supabase);
   const sensorsService = makeSensorsService(sensorsRepo, alertsRepo, logsRepo);
-  const actuatorsService = makeActuatorsService(db);
-  const systemService = makeSystemService(systemState);
 
   const sensorsCtrl = makeSensorsController(sensorsService);
   const alertsCtrl = makeAlertsController(alertsRepo);
-  const actuatorsCtrl = makeActuatorsController(actuatorsService);
   const logsCtrl = makeLogsController(logsRepo);
-  const systemCtrl = makeSystemController(systemService);
 
-  app.use('/api/sensors', makeSensorsRouter(sensorsCtrl));
-  app.post('/api/telemetry', (req, res) => sensorsCtrl.ingestTelemetry(req, res));
-  app.use('/api/alerts', makeAlertsRouter(alertsCtrl));
-  app.use('/api/actuators', makeActuatorsRouter(actuatorsCtrl));
-  app.use('/api/logs', makeLogsRouter(logsCtrl));
-  app.use('/api', makeSystemRouter(systemCtrl));
+  const defaultDeviceId = config.ESP_DEVICE_IDS[0] || 'astro-verde-esp';
+  const manualService = makeManualControlsService({ supabase, espService, logger, defaultDeviceId });
+  const manualCtrl = makeManualControlsController(manualService);
 
-  const supabase = getSupabase();
-  if (supabase) {
-    const espService = makeEspService({ supabase, logger });
-    const espCtrl = makeEspController(espService);
-    const manualControlsService = makeManualControlsService({
-      supabase,
-      espService,
-      logger,
-      defaultDeviceId: config.ESP_DEVICE_IDS[0] || 'astro-verde-esp',
-    });
-    const manualControlsCtrl = makeManualControlsController(manualControlsService);
+  const usersService = makeUsersService({ supabase });
+  const usersCtrl = makeUsersController(usersService);
 
-    app.use('/api/esp', makeEspRouter(espCtrl));
-    app.use('/api/manual-controls', makeManualControlsRouter(manualControlsCtrl));
+  app.get('/api/auth/me', autenticar, (req, res) => sendSuccess(res, 'Sessao valida.', { user: req.user }));
+  app.use('/api/sensors', autenticar, makeSensorsRouter(sensorsCtrl));
+  app.use('/api/alerts', autenticar, makeAlertsRouter(alertsCtrl));
+  app.use('/api/logs', autenticar, makeLogsRouter(logsCtrl));
+  app.use('/api/esp', autenticar, makeEspRouter(espCtrl));
+  app.use('/api/manual-controls', autenticar, makeManualControlsRouter(manualCtrl));
+  app.use('/api/users', autenticar, makeUsersRouter(usersCtrl));
 
-    setInterval(() => {
-      espService.checkOfflineDevices().catch(() => {});
-    }, 30000);
-  }
-
-  app.get('/api', (req, res) => {
-    sendSuccess(res, 'API Astro Verde online.', { status: 'online' });
-  });
-
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
-  });
-
+  app.use('/api', (req, res) => sendError(res, 'Rota nao encontrada.', 404));
+  app.use((req, res) => res.sendFile(path.join(frontendPath, 'index.html')));
   return app;
 }
 

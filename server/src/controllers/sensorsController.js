@@ -12,9 +12,9 @@ const { sendSuccess, sendError } = require('../utils/httpResponse');
 function makeSensorsController(sensorsService) {
   return {
     /* GET /api/sensors/latest - leitura mais recente para dashboard. */
-    getLatest(req, res) {
+    async getLatest(req, res) {
       try {
-        const data = sensorsService.getLatestReading();
+        const data = await sensorsService.getLatestReading();
         return sendSuccess(res, 'Leitura mais recente carregada com sucesso.', data);
       } catch (err) {
         return sendError(res, err.message, 500);
@@ -36,9 +36,9 @@ function makeSensorsController(sensorsService) {
      *   "is_retransmit": false
      * }
      */
-    ingestTelemetry(req, res) {
+    async ingestTelemetry(req, res) {
       try {
-        const data = sensorsService.ingestTelemetry(req.body);
+        const data = await sensorsService.ingestTelemetry(req.body);
         return sendSuccess(res, 'Telemetria recebida com sucesso.', data, 201);
       } catch (err) {
         return sendError(res, err.message, 400);
@@ -46,12 +46,12 @@ function makeSensorsController(sensorsService) {
     },
 
     /* GET /api/sensors/export/csv - exporta historico bruto em CSV. */
-    exportCsv(req, res) {
+    async exportCsv(req, res) {
       try {
-        const rows = sensorsService.getExportData();
-        const header = 'device_id,sensor_type,value,unit,quality,lighting_state,temp_control,collected_at\n';
+        const rows = await sensorsService.getExportData();
+        const header = 'device_id,sensor,valor,source,created_at,timestamp_device\n';
         const body = rows.map((row) =>
-          `${row.device_id},${row.sensor_type},${row.value},${row.unit},${row.quality},${row.lighting_state},${row.temp_control},${row.collected_at}`
+          `${row.device_id},${row.sensor},${JSON.stringify(row.value ?? {})},${row.source || ''},${row.created_at || ''},${row.timestamp_device || ''}`
         ).join('\n');
 
         res.setHeader('Content-Type', 'text/csv');

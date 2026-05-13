@@ -1,24 +1,37 @@
-/*
- * modules/harvest.js - Planejamento de Safras (RF04/RF05)
+/**
+ * @file harvest.js
+ * @module harvest
+ * @description Planejamento e registro de safras em modo leitura para Visualizador.
+ * @requisitos RF04, RF05, RN05
+ * @ator Administrador, Operador, Visualizador
+ * @mode real
  */
 
 const Harvest = {
-
   items: [
     { id: 1, crop: 'Alface Crespa', lot: 'Lote 04A', plantedAt: '01/04/2026', harvestAt: '10/05/2026', totalDays: 40, currentDay: 7, status: 'growing' },
-    { id: 2, crop: 'Manjericão', lot: 'Lote 02B', plantedAt: '15/03/2026', harvestAt: '25/04/2026', totalDays: 40, currentDay: 24, status: 'final' },
+    { id: 2, crop: 'Manjericao', lot: 'Lote 02B', plantedAt: '15/03/2026', harvestAt: '25/04/2026', totalDays: 40, currentDay: 24, status: 'final' },
   ],
 
   _nextId: 3,
+
+  _canEdit() {
+    return (typeof Auth !== 'undefined') ? Auth.isOperadorOuAdmin() : true;
+  },
 
   init() {
     const container = document.getElementById('harvestList');
     if (!container || container.dataset.bound === 'true') return;
 
     container.dataset.bound = 'true';
-    container.addEventListener('click', event => {
+    container.addEventListener('click', (event) => {
       const button = event.target.closest('[data-harvest-action]');
       if (!button) return;
+
+      if (!this._canEdit()) {
+        Modal.show('Acesso restrito', 'Visualizador pode apenas consultar as safras.', 'warning');
+        return;
+      }
 
       const itemId = Number(button.dataset.id);
       if (button.dataset.harvestAction === 'edit') this.openEditForm(itemId);
@@ -45,8 +58,9 @@ const Harvest = {
       return;
     }
 
+    const canEdit = this._canEdit();
     container.innerHTML = '';
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       const { label, cls } = this.statusLabel(item.status);
       const progress = Math.round((item.currentDay / item.totalDays) * 100);
       const div = document.createElement('div');
@@ -54,7 +68,7 @@ const Harvest = {
       div.innerHTML = `
         <div class="item-info harvest-info">
           <h4>${item.crop} - ${item.lot}</h4>
-          <p>Plantio: ${item.plantedAt} &nbsp;|&nbsp; Colheita prevista: ${item.harvestAt}</p>
+          <p>Plantio: ${item.plantedAt} | Colheita prevista: ${item.harvestAt}</p>
           <div class="progress-track">
             <div class="progress-bar"></div>
           </div>
@@ -62,8 +76,8 @@ const Harvest = {
         </div>
         <div class="harvest-actions">
           <span class="status-text harvest-status ${cls}">${label}</span>
-          <button class="btn btn-primary btn-sm" type="button" data-harvest-action="edit" data-id="${item.id}">Editar</button>
-          <button class="btn btn-danger btn-sm" type="button" data-harvest-action="remove" data-id="${item.id}">Remover</button>
+          ${canEdit ? `<button class="btn btn-primary btn-sm" type="button" data-harvest-action="edit" data-id="${item.id}">Editar</button>
+          <button class="btn btn-danger btn-sm" type="button" data-harvest-action="remove" data-id="${item.id}">Remover</button>` : ''}
         </div>
       `;
 
@@ -73,6 +87,11 @@ const Harvest = {
   },
 
   openAddForm() {
+    if (!this._canEdit()) {
+      Modal.show('Acesso restrito', 'Visualizador pode apenas consultar as safras.', 'warning');
+      return;
+    }
+
     document.getElementById('formModalTitle').textContent = 'Nova Safra';
     document.getElementById('formModalBody').innerHTML = `
       <div class="form-grid">
@@ -92,12 +111,12 @@ const Harvest = {
             <input id="fh_planted" class="form-input" type="date">
           </div>
           <div class="form-field">
-            <label class="form-label">Previsão de Colheita</label>
+            <label class="form-label">Previsao de Colheita</label>
             <input id="fh_harvest" class="form-input" type="date">
           </div>
         </div>
         <div class="form-field">
-          <label class="form-label">Duração estimada (dias)</label>
+          <label class="form-label">Duracao estimada (dias)</label>
           <input id="fh_days" class="form-input" type="number" min="1" placeholder="40">
         </div>
       </div>
@@ -111,16 +130,16 @@ const Harvest = {
       const days = parseInt(document.getElementById('fh_days').value, 10) || 40;
 
       if (!crop || !lot) {
-        alert('Informe a cultura e o lote.');
+        Modal.show('Campos obrigatorios', 'Informe a cultura e o lote.', 'warning');
         return;
       }
 
       if (!planted || !harvest) {
-        alert('Informe as datas.');
+        Modal.show('Campos obrigatorios', 'Informe as datas.', 'warning');
         return;
       }
 
-      const formatDate = value => value.split('-').reverse().join('/');
+      const formatDate = (value) => value.split('-').reverse().join('/');
       this.items.push({
         id: this._nextId++,
         crop,
@@ -141,7 +160,12 @@ const Harvest = {
   },
 
   openEditForm(id) {
-    const item = this.items.find(entry => entry.id === id);
+    if (!this._canEdit()) {
+      Modal.show('Acesso restrito', 'Visualizador pode apenas consultar as safras.', 'warning');
+      return;
+    }
+
+    const item = this.items.find((entry) => entry.id === id);
     if (!item) return;
 
     document.getElementById('formModalTitle').textContent = 'Editar Safra';
@@ -187,11 +211,16 @@ const Harvest = {
   },
 
   remove(id) {
-    const item = this.items.find(entry => entry.id === id);
+    if (!this._canEdit()) {
+      Modal.show('Acesso restrito', 'Visualizador pode apenas consultar as safras.', 'warning');
+      return;
+    }
+
+    const item = this.items.find((entry) => entry.id === id);
     if (!item) return;
     if (!confirm(`Remover safra "${item.crop} - ${item.lot}"?`)) return;
 
-    this.items = this.items.filter(entry => entry.id !== id);
+    this.items = this.items.filter((entry) => entry.id !== id);
     Logger.add('warning', 'Safra Removida', `${item.crop} - ${item.lot} removida.`);
     this.render();
   },

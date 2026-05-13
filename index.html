@@ -15,6 +15,41 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <link rel="stylesheet" href="assets/css/automation.css">
+  <script>
+    (function guardDashboardAccess() {
+      function parseTokenPayload(jwt) {
+        try {
+          const part = jwt.split('.')[1];
+          const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+          return JSON.parse(json);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function hasValidSupabaseSession() {
+        const keys = Object.keys(localStorage || {});
+        const tokenKey = keys.find((k) => k.includes('-auth-token'));
+        if (!tokenKey) return false;
+
+        const raw = localStorage.getItem(tokenKey);
+        if (!raw) return false;
+
+        let parsed = null;
+        try { parsed = JSON.parse(raw); } catch (_) { return false; }
+        const accessToken = parsed?.access_token || parsed?.currentSession?.access_token;
+        if (!accessToken) return false;
+
+        const payload = parseTokenPayload(accessToken);
+        if (!payload?.exp) return false;
+        return payload.exp * 1000 > Date.now();
+      }
+
+      if (!hasValidSupabaseSession()) {
+        window.location.replace('login.html');
+      }
+    }());
+  </script>
 </head>
 <body>
   <aside class="sidebar">
@@ -44,8 +79,9 @@
         <small id="buildVersion" style="color:#6c757d;font-weight:600;">build 2026-05-09.5</small>
       </div>
       <div class="topbar-actions">
-        <div class="sys-status"><div class="pulse"></div><span id="sysStatusText">Modo Mock Ativo</span></div>
+        <div class="sys-status"><div class="pulse"></div><span id="sysStatusText">Modo Producao Ativo</span></div>
         <button class="btn-icon" type="button" data-ui-action="show-notifications" title="Notificacoes"><i class="ph ph-bell"></i><span class="badge hidden" id="notifBadge">0</span></button>
+        <button class="btn btn-primary" type="button" id="btnLogout">Sair</button>
         <div class="user-avatar" title="Operador">OP</div>
       </div>
     </header>
@@ -57,40 +93,40 @@
         <div class="kpi-grid">
           <div class="card">
             <div class="kpi-header"><span id="waterHeader">Nivel do Reservatorio</span><i class="ph ph-drop"></i></div>
-            <div class="kpi-value" id="waterLevel">88%</div>
+            <div class="kpi-value" id="waterLevel">--</div>
             <div class="kpi-sub">Eficiencia hidrica: <span class="status-ok">99%</span></div>
             <div class="kpi-sub" id="waterTimestamp">Ultima leitura: -</div>
           </div>
 
           <div class="card" id="cardPh">
             <div class="kpi-header"><span id="phHeader">Nivel de pH</span><i class="ph ph-flask"></i></div>
-            <div class="kpi-value" id="phValue">6.1</div>
-            <div class="kpi-sub">Status: <span class="status-text status-ok" id="phStatus">Ideal (5.5-6.5)</span></div>
+            <div class="kpi-value" id="phValue">--</div>
+            <div class="kpi-sub">Status: <span class="status-text status-alert" id="phStatus">AGUARDANDO SENSOR</span></div>
             <div class="kpi-sub" id="phTimestamp">Ultima leitura: -</div>
           </div>
 
           <div class="card" id="cardEc">
             <div class="kpi-header"><span id="ecHeader">Minerais (EC / TDS)</span><i class="ph ph-atom"></i></div>
-            <div class="kpi-value"><span id="ecValue">1.75</span><span class="kpi-unit">mS/cm</span></div>
-            <div class="kpi-sub">TDS: <span id="tdsValue">875</span> ppm</div>
+            <div class="kpi-value"><span id="ecValue">--</span><span class="kpi-unit">mS/cm</span></div>
+            <div class="kpi-sub">TDS: <span id="tdsValue">--</span> ppm</div>
           </div>
 
           <div class="card" id="cardTemp">
             <div class="kpi-header"><span id="tempHeader">Temperatura Ambiente</span><i class="ph ph-thermometer"></i></div>
-            <div class="kpi-value" id="tempValue">23.0°C</div>
-            <div class="kpi-sub">Status: <span class="status-text status-ok" id="tempStatus">Ideal (18-26°C)</span></div>
+            <div class="kpi-value" id="tempValue">--</div>
+            <div class="kpi-sub">Status: <span class="status-text status-alert" id="tempStatus">AGUARDANDO SENSOR</span></div>
           </div>
 
           <div class="card">
             <div class="kpi-header"><span id="nftHeader">Fluxo Laminar (NFT)</span><i class="ph ph-waves"></i></div>
-            <div class="kpi-value kpi-value-md" id="nftStatusVal">Circulando</div>
-            <div class="kpi-sub kpi-sub-spaced" id="nftStatusSub">Bomba Principal: <span class="status-ok">Ligada</span></div>
+            <div class="kpi-value kpi-value-md" id="nftStatusVal">AGUARDANDO SENSOR</div>
+            <div class="kpi-sub kpi-sub-spaced" id="nftStatusSub">Bomba Principal: <span class="status-alert">Sem leitura</span></div>
           </div>
 
           <div class="card lighting-card" id="cardLighting">
             <div class="kpi-header"><span id="lightingHeader">Iluminacao LED 6000K</span><i class="ph ph-sun-dim"></i></div>
-            <div id="lightingState"><span class="light-state on">Acesa</span></div>
-            <div class="kpi-sub" id="lightingSub">Potencia: 100% | Ciclo: 16h/8h</div>
+            <div id="lightingState"><span class="light-state off">AGUARDANDO SENSOR</span></div>
+            <div class="kpi-sub" id="lightingSub">Aguardando leitura real da iluminacao</div>
           </div>
         </div>
 
@@ -103,9 +139,9 @@
           <div class="panel">
             <div class="panel-title">Controle e Ajustes</div>
             <div class="list-group">
-              <div class="list-item control-item-highlight"><div class="item-info"><h4>Ajuste de pH (CU OPE 01)</h4><p>Acionar bomba dosadora manualmente</p></div><button class="btn btn-action" type="button" data-ui-action="correct-ph">Injetar</button></div>
-              <div class="list-item"><div class="item-info"><h4>Simular Falha NFT (RF07)</h4><p>Testar alerta critico do fluxo</p></div><button class="btn btn-danger" type="button" data-ui-action="simulate-nft-failure">Simular</button></div>
-              <div class="list-item"><div class="item-info"><h4>Simular Lampada Queimada (RF02)</h4><p>Testar deteccao de falha luminosa</p></div><button class="btn btn-warning" type="button" data-ui-action="simulate-light-burn">Simular</button></div>
+              <div class="list-item control-item-highlight"><div class="item-info"><h4>Ajuste de pH (CU OPE 01)</h4><p>Controle automatico realizado por regras do backend e comandos ESP.</p></div><span class="badge-status active">Automatico</span></div>
+              <div class="list-item"><div class="item-info"><h4>Fluxo NFT</h4><p>Monitoramento via leitura real do sensor</p></div><span class="badge-status active">Tempo real</span></div>
+              <div class="list-item"><div class="item-info"><h4>Iluminacao LED</h4><p>Status determinado por telemetria real</p></div><span class="badge-status active">Tempo real</span></div>
               <div class="list-item"><div class="item-info"><h4>Resfriamento</h4><p>Controle termico superior</p></div><span class="status-text status-danger" id="coolingStatus">Inativo</span></div>
               <div class="list-item"><div class="item-info"><h4>Aquecimento</h4><p>Controle termico inferior</p></div><span class="status-text status-danger" id="heatingStatus">Inativo</span></div>
               <div class="list-item"><div class="item-info"><h4>Modulos Fisicos (RF06)</h4><p>Torre A - 3 Modulos Empilhados</p></div><span class="badge-status active">Sincronizados</span></div>
@@ -183,6 +219,7 @@
           </div>
         </div>
       </section>
+
     </div>
   </main>
 
@@ -207,6 +244,7 @@
   </div>
 
   <script src="assets/js/state.js"></script>
+  <script src="assets/js/auth.js"></script>
   <script src="assets/js/modules/alerts.js"></script>
   <script src="assets/js/modules/automation.js"></script>
   <script src="assets/js/modules/logs.js"></script>
@@ -215,14 +253,14 @@
   <script src="assets/js/modules/dashboard.js"></script>
   <script src="assets/js/charts.js"></script>
   <script src="assets/js/router.js"></script>
-  <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/constants/api.js"></script>
   <script src="assets/js/utils/http.js"></script>
   <script src="assets/js/services/api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    window.SUPABASE_URL = "";
-    window.SUPABASE_ANON_KEY = "";
+    window.APP_API_BASE_URL = window.APP_API_BASE_URL || "https://astro-verde.vercel.app";
+    window.SUPABASE_URL = window.SUPABASE_URL || "https://pbizwbilzhidprjynywn.supabase.co";
+    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "sb_publishable_yRy2DQUUXshKzfK6rouBPg_kgG7XJdH";
   </script>
   <script src="assets/js/main.js"></script>
 </body>

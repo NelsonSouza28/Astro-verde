@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astro Verde | Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    :root {
+      --login-accent: #91cf00;
+      --login-accent-2: #3cb371;
+      --login-dark: #08111a;
+      --login-glass: rgba(255, 255, 255, 0.86);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      font-family: "Inter", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(145, 207, 0, 0.22), transparent 60%),
+        radial-gradient(900px 500px at 90% 90%, rgba(60, 179, 113, 0.25), transparent 60%),
+        linear-gradient(145deg, #0a1620, #121f2b 40%, #1b2a38);
+      overflow: hidden;
+      perspective: 1200px;
+    }
+
+    .bg-orb {
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(50px);
+      opacity: .35;
+      pointer-events: none;
+      animation: drift 8s ease-in-out infinite alternate;
+    }
+    .orb-a { width: 340px; height: 340px; background: #8bd300; top: -80px; left: -60px; }
+    .orb-b { width: 300px; height: 300px; background: #1f8f5f; right: -80px; bottom: -80px; animation-delay: 1.2s; }
+
+    .login-wrap {
+      width: min(520px, 94vw);
+      padding: 2rem;
+      border-radius: 24px;
+      background: linear-gradient(160deg, var(--login-glass), rgba(255, 255, 255, 0.76));
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        0 34px 80px rgba(0, 0, 0, 0.45),
+        0 10px 26px rgba(15, 30, 48, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      transform-style: preserve-3d;
+      transition: transform .35s ease, box-shadow .35s ease;
+      position: relative;
+      isolation: isolate;
+    }
+    .login-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 24px;
+      padding: 1px;
+      background: linear-gradient(130deg, rgba(145, 207, 0, .65), rgba(60, 179, 113, .35), rgba(255, 255, 255, .55));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .login-wrap:hover {
+      transform: rotateX(2deg) rotateY(-2deg) translateY(-4px);
+      box-shadow:
+        0 42px 90px rgba(0, 0, 0, 0.5),
+        0 16px 30px rgba(15, 30, 48, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .login-logo {
+      width: 92px;
+      height: 92px;
+      display: block;
+      margin: 0 auto .9rem;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.2));
+      transform: translateZ(30px);
+    }
+    .login-wrap h1 {
+      margin: .35rem 0 .25rem;
+      font-size: clamp(1.9rem, 2.8vw, 2.35rem);
+      line-height: 1.1;
+      color: #061321;
+      letter-spacing: -0.03em;
+      transform: translateZ(24px);
+    }
+    .login-wrap p {
+      color: #415467;
+      font-size: 1.03rem;
+      margin-bottom: 1.2rem;
+      transform: translateZ(18px);
+    }
+
+    .login-form {
+      display: grid;
+      gap: .85rem;
+      transform: translateZ(20px);
+    }
+    .form-input {
+      width: 100%;
+      border: 1px solid rgba(12, 28, 40, 0.2);
+      border-radius: 12px;
+      padding: .92rem 1rem;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, .92);
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, .08);
+      transition: border-color .2s ease, box-shadow .22s ease, transform .2s ease, background .2s ease;
+    }
+    .form-input::placeholder { color: #6a7d90; }
+    .form-input:hover {
+      border-color: rgba(18, 45, 66, .35);
+      background: #fff;
+      transform: translateY(-1px);
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--login-accent);
+      box-shadow: 0 0 0 4px rgba(145, 207, 0, 0.24), inset 0 1px 2px rgba(15, 23, 42, .05);
+      background: #fff;
+      transform: translateY(-2px);
+    }
+
+    .btn.btn-action {
+      border: none;
+      border-radius: 12px;
+      padding: .95rem 1rem;
+      font-size: 1.03rem;
+      font-weight: 700;
+      color: #071119;
+      background: linear-gradient(135deg, #9bdd00, #79bf00);
+      box-shadow: 0 14px 24px rgba(121, 191, 0, 0.33), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      transition: transform .2s ease, box-shadow .22s ease, filter .22s ease;
+      cursor: pointer;
+    }
+    .btn.btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 28px rgba(121, 191, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+      filter: brightness(1.02);
+    }
+    .btn.btn-action:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 14px rgba(121, 191, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .login-feedback {
+      min-height: 1.2rem;
+      color: #9f1d2f;
+      font-size: .9rem;
+      padding-left: .2rem;
+    }
+
+    @keyframes drift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(18px, -12px, 0); }
+    }
+
+    @media (max-width: 560px) {
+      .login-wrap { padding: 1.2rem; border-radius: 18px; }
+      .login-wrap h1 { font-size: 1.9rem; }
+      .login-wrap p { font-size: .98rem; }
+      .login-logo { width: 80px; height: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <main class="login-wrap" role="main">
+    <img src="./ASTRO.png" alt="Astro Verde" class="login-logo">
+    <h1>Acesso ao Astro Verde</h1>
+    <p>Entre com sua conta para acessar o sistema.</p>
+    <form id="loginForm" class="login-form">
+      <input id="loginEmail" class="form-input" type="email" placeholder="email" required>
+      <input id="loginPassword" class="form-input" type="password" placeholder="senha" required>
+      <button class="btn btn-action" type="submit">Entrar</button>
+      <div id="loginFeedback" class="login-feedback"></div>
+    </form>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.APP_API_BASE_URL = window.APP_API_BASE_URL || "https://astro-verde.vercel.app";
+    window.SUPABASE_URL = window.SUPABASE_URL || "https://pbizwbilzhidprjynywn.supabase.co";
+    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "sb_publishable_yRy2DQUUXshKzfK6rouBPg_kgG7XJdH";
+  </script>
+  <script src="assets/js/login.js"></script>
+</body>
+</html>

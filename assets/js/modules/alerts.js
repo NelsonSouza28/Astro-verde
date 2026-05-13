@@ -24,7 +24,7 @@
    ============================================================ */
 const BusinessRules = {
 
-  /* Chamado pelo simulador a cada tick */
+  /* Chamado apos atualizacao de leituras reais do dashboard */
   evaluate() {
     this._checkPh();
     this._checkEc();

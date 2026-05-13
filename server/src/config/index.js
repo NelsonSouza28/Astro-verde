@@ -1,6 +1,6 @@
 /**
  * @module config
- * @description Configuracoes de dominio e infraestrutura para operacao real/simulada/editavel.
+ * @description Configuracoes de dominio e infraestrutura para operacao real.
  * @hardware esp32/esp8266
  * @mode real
  */
@@ -24,25 +24,15 @@ const config = {
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || '',
 
-  SENSOR_MODES: {
-    ph: 'real',
-    boia: 'real',
-    nivel_reservatorio: 'real',
-    minerais: 'simulated',
-    temperatura_ambiente: 'simulated',
-    fluxo_laminar: 'editable',
-    iluminacao: 'editable',
-  },
-
   SENSOR_LIMITS: {
     ph: { min: 5.5, max: 6.5 },
     ec: { min: 1.2, max: 2.5 },
     temperature: { min: 18, max: 26, critical: 30 },
     luminosity: { minExpected: 200 },
   },
-
-  SIMULATOR_INTERVAL_MS: 3000,
-  CORS_ORIGINS: ['http://localhost:5500', 'http://127.0.0.1:5500', '*'],
+  CORS_ORIGINS: (process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((v) => v.trim()).filter(Boolean)
+    : ['http://localhost:5500', 'http://127.0.0.1:5500']),
 };
 
 module.exports = config;

@@ -1,143 +1,191 @@
-/*
- * services/sensorsService.js - Regras de negocio das leituras de sensores.
- *
- * Esta camada:
- * - valida payload recebido via telemetria
- * - classifica qualidade da leitura
- * - persiste leitura no repositorio
- * - registra logs e alertas de apoio operacional
+/**
+ * @file sensorsService.js
+ * @module sensorsService
+ * @description Regras de monitoramento com dados reais persistidos no Supabase.
+ * @requisitos RF03, RF07, RF08, RF10, RF12, RN01, RN02, RN06, RN07, RN10, RNF03, RNF06
+ * @ator Operador, Sistema
+ * @mode real
  */
 
-const config = require('../config');
-const simulator = require('../mocks/sensorSimulator');
+const { validarFaixaPh, detectarInterrupcaoFluxoNft } = require('./formulas');
 
 function makeSensorsService(sensorsRepo, alertsRepo, logsRepo) {
+  function _defaultSnapshot() {
+    return {
+      ph: null,
+      ec: null,
+      tds: null,
+      temperature: null,
+      humidity: null,
+      luminosity: null,
+      waterLevel: null,
+      nftFlow: null,
+      boia: null,
+      nivel_reservatorio: null,
+      fluxo_laminar: null,
+      iluminacao: null,
+    };
+  }
+
+  function _value(row) {
+    if (!row) return null;
+    const raw = row.value;
+    if (raw && typeof raw === 'object' && 'value' in raw) return raw.value;
+    return raw ?? null;
+  }
+
+  function _mapSensorName(sensorName) {
+    const alias = {
+      temperatura: 'temperature',
+      temperature: 'temperature',
+      umidade: 'humidity',
+      humidity: 'humidity',
+      luminosidade: 'luminosity',
+      luminosity: 'luminosity',
+      nivel_reservatorio: 'nivel_reservatorio',
+      fluxo_nft: 'nftFlow',
+      fluxo_laminar: 'fluxo_laminar',
+      ph: 'ph',
+      ec: 'ec',
+      boia: 'boia',
+      iluminacao: 'iluminacao',
+    };
+    return alias[sensorName] || sensorName;
+  }
+
   return {
-    /*
-     * Retorna estado consolidado dos sensores/atuadores para o dashboard.
-     * Enquanto hardware real nao estiver conectado, os dados vem do simulador.
-     */
-    getLatestReading() {
-      const state = simulator.getCurrentState();
+    async getLatestReading() {
+      const rows = await sensorsRepo.getLatest(400);
+      const sensors = _defaultSnapshot();
+      const bySensor = new Map();
+
+      for (const row of rows) {
+        if (!bySensor.has(row.sensor)) bySensor.set(row.sensor, row);
+      }
+
+      for (const [sensorName, row] of bySensor.entries()) {
+        const key = _mapSensorName(sensorName);
+        const value = _value(row);
+        if (key === 'nftFlow') {
+          sensors.nftFlow = value !== null ? Number(value) > 0 : null;
+          continue;
+        }
+        if (key === 'boia') {
+          sensors.boia = typeof value === 'boolean' ? value : null;
+          continue;
+        }
+        if (key === 'iluminacao') {
+          sensors.iluminacao = (value && typeof value === 'object') ? value : null;
+          continue;
+        }
+        sensors[key] = value !== null && value !== undefined ? Number(value) : null;
+      }
+
+      if (Number.isFinite(sensors.nivel_reservatorio)) {
+        sensors.waterLevel = sensors.nivel_reservatorio;
+      }
+      if (Number.isFinite(sensors.ec)) {
+        sensors.tds = Math.round(sensors.ec * 500);
+      }
 
       return {
-        sensors: {
-          ph: Number(state.ph.toFixed(2)),
-          ec: Number(state.ec.toFixed(2)),
-          tds: Math.round(state.ec * 500),
-          temperature: Number(state.temperature.toFixed(1)),
-          humidity: Number(state.humidity.toFixed(1)),
-          luminosity: Math.round(state.luminosity),
-          waterLevel: state.waterLevel,
-          nftFlow: state.nftFlow,
-        },
-        actuators: {
-          lightingCommand: state.lightingCommand,
-          lightingState: state.lightingState,
-          lightingPower: state.lightingPower,
-          coolingActive: state.coolingActive,
-          heatingActive: state.heatingActive,
-        },
-        timestamp: new Date().toISOString(),
+        sensors,
+        lastKnown: rows[0] || null,
+        timestamp: rows[0]?.created_at || null,
       };
     },
 
-    /*
-     * Recebe pacote de telemetria do ESP32.
-     * Guarda leitura bruta e marca qualidade para analise posterior.
-     */
-    ingestTelemetry(payload = {}) {
+    async ingestTelemetry(payload = {}) {
       this._validateTelemetry(payload);
-      const quality = this._assessQuality(payload);
 
-      sensorsRepo.insert({
-        device_id: payload.device_id || 'unknown',
-        sensor_type: 'telemetry',
+      const faixaPh = await sensorsRepo.getConfigMap();
+      const phMin = Number.isFinite(faixaPh.ph_min) ? faixaPh.ph_min : 5.5;
+      const phMax = Number.isFinite(faixaPh.ph_max) ? faixaPh.ph_max : 6.5;
+      const fluxoMin = Number.isFinite(faixaPh.fluxo_minimo) ? faixaPh.fluxo_minimo : 0.5;
+
+      const phOk = validarFaixaPh(payload.ph, phMin, phMax);
+      const fluxoInterrompido = detectarInterrupcaoFluxoNft(payload.fluxo_nft ?? payload.fluxo_laminar ?? 0, fluxoMin);
+
+      const timestamp = payload.timestamp || new Date().toISOString();
+      await sensorsRepo.insertReading({
+        device_id: payload.device_id,
+        sensor: 'ph',
         value: payload.ph,
-        unit: 'pH',
-        quality,
-        nft_flow: payload.nft_flow ? 1 : 0,
-        lighting_state: 'unknown',
-        temp_control: 'unknown',
-        is_retransmit: payload.is_retransmit ? 1 : 0,
+        timestamp,
+        source: 'real',
       });
 
-      this._syncTelemetryAlerts(payload, quality);
-      this._registerTelemetryLog(payload, quality);
-
-      return {
-        accepted: true,
-        quality,
-        deviceId: payload.device_id,
-      };
-    },
-
-    /* Valida campos minimos para evitar telemetria inconsistente. */
-    _validateTelemetry(payload) {
-      if (!payload.device_id) {
-        throw new Error('Campo "device_id" e obrigatorio.');
+      if (payload.temperatura !== undefined || payload.temperature !== undefined) {
+        await sensorsRepo.insertReading({
+          device_id: payload.device_id,
+          sensor: 'temperatura',
+          value: payload.temperatura ?? payload.temperature,
+          timestamp,
+          source: 'real',
+        });
       }
 
-      if (payload.ph !== undefined && (payload.ph < 0 || payload.ph > 14)) {
-        throw new Error(`Campo "ph" invalido: ${payload.ph}.`);
+      if (payload.umidade !== undefined || payload.humidity !== undefined) {
+        await sensorsRepo.insertReading({
+          device_id: payload.device_id,
+          sensor: 'umidade',
+          value: payload.umidade ?? payload.humidity,
+          timestamp,
+          source: 'real',
+        });
       }
 
-      if (payload.temperature !== undefined && (payload.temperature < -10 || payload.temperature > 80)) {
-        throw new Error(`Campo "temperature" invalido: ${payload.temperature}.`);
-      }
-    },
-
-    /* Classifica qualidade da leitura com base nos limites de configuracao. */
-    _assessQuality(payload) {
-      const limits = config.SENSOR_LIMITS;
-
-      if (
-        payload.ph !== undefined
-        && (payload.ph < limits.ph.min || payload.ph > limits.ph.max)
-      ) {
-        return 'warning';
+      if (payload.luminosidade !== undefined || payload.luminosity !== undefined) {
+        await sensorsRepo.insertReading({
+          device_id: payload.device_id,
+          sensor: 'luminosidade',
+          value: payload.luminosidade ?? payload.luminosity,
+          timestamp,
+          source: 'real',
+        });
       }
 
-      if (payload.ec !== undefined && payload.ec < 0.05) {
-        return 'invalid';
+      if (payload.fluxo_nft !== undefined || payload.fluxo_laminar !== undefined) {
+        await sensorsRepo.insertReading({
+          device_id: payload.device_id,
+          sensor: 'fluxo_nft',
+          value: payload.fluxo_nft ?? payload.fluxo_laminar,
+          timestamp,
+          source: 'real',
+        });
       }
 
-      return 'ok';
-    },
-
-    /*
-     * Atualiza alerta de pH fora de faixa para acompanhamento operacional.
-     * O alerta e resolvido automaticamente quando o pH volta ao intervalo ideal.
-     */
-    _syncTelemetryAlerts(payload, quality) {
-      if (payload.ph === undefined) return;
-
-      if (quality === 'warning') {
-        alertsRepo.upsert(
+      if (!phOk) {
+        await alertsRepo.upsert(
           'ph_out_of_range',
           'warning',
-          'pH fora da faixa ideal',
-          `Leitura recebida: ${payload.ph}. Verifique dosagem da bomba de pH.`
+          'pH fora da faixa da cultura',
+          `Leitura ${payload.ph} fora de ${phMin}-${phMax}`,
         );
-        return;
       }
 
-      alertsRepo.resolve('ph_out_of_range');
+      if (fluxoInterrompido) {
+        await alertsRepo.upsert(
+          'nft_flow_failure',
+          'critical',
+          'Interrupcao de fluxo NFT',
+          'Fluxo abaixo do minimo configurado.',
+        );
+      }
+
+      await logsRepo.insert(phOk ? 'info' : 'warning', 'telemetria', `device=${payload.device_id} ph=${payload.ph}`);
+      return { accepted: true, phOk, fluxoInterrompido };
     },
 
-    /* Escreve log resumido de telemetria para rastreabilidade. */
-    _registerTelemetryLog(payload, quality) {
-      const phText = payload.ph !== undefined ? payload.ph : 'n/a';
-      logsRepo.insert(
-        quality === 'ok' ? 'info' : 'warning',
-        'Telemetria recebida',
-        `device=${payload.device_id} ph=${phText} quality=${quality}`
-      );
+    _validateTelemetry(payload) {
+      if (!payload.device_id) throw new Error('Campo "device_id" e obrigatorio.');
+      if (typeof payload.ph !== 'number' || payload.ph < 0 || payload.ph > 14) {
+        throw new Error('Campo "ph" invalido.');
+      }
     },
 
-    /* Exporta dados historicos para gerar CSV no controller. */
-    getExportData() {
-      return sensorsRepo.exportCsv(24);
+    async getExportData(hours = 24) {
+      return sensorsRepo.exportRows(hours);
     },
   };
 }

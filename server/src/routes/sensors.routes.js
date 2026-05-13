@@ -1,26 +1,20 @@
-/*
- * routes/sensors.routes.js - Rotas de leitura e exportacao de sensores.
- *
- * Inclui endpoint de telemetria para integracao com ESP32.
+/**
+ * @file sensors.routes.js
+ * @module sensorsRoutes
+ * @description Rotas de monitoramento e exportacao de sensores.
+ * @requisitos RF03, RF08, RF10, RN10
+ * @ator Operador, Visualizador
+ * @mode real
  */
 
 const express = require('express');
+const { exigirPerfil } = require('../middlewares/authz');
 
 function makeSensorsRouter(sensorsController) {
   const router = express.Router();
-
-  /* Ultima leitura consolidada para atualizar dashboard. */
-  router.get('/latest', (req, res) => sensorsController.getLatest(req, res));
-
-  /* Exporta historico bruto em CSV para analise externa. */
-  router.get('/export/csv', (req, res) => sensorsController.exportCsv(req, res));
-
-  /*
-   * Endpoint de telemetria para camada fisica (ESP32).
-   * O microcontrolador envia pacote de sensores por POST.
-   */
-  router.post('/telemetry', (req, res) => sensorsController.ingestTelemetry(req, res));
-
+  router.get('/latest', exigirPerfil('Visualizador'), (req, res) => sensorsController.getLatest(req, res));
+  router.get('/export/csv', exigirPerfil('Visualizador'), (req, res) => sensorsController.exportCsv(req, res));
+  router.post('/telemetry', exigirPerfil('Operador'), (req, res) => sensorsController.ingestTelemetry(req, res));
   return router;
 }
 

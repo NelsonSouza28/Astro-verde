@@ -265,7 +265,7 @@
   filter: brightness(0.9);
 }
 
-/* Botão de perigo — rosa/vermelho, para simulações de falha */
+/* Botao de perigo para acoes sensiveis do operador */
 .btn-danger {
   background-color: var(--primary-pink);
   color: #fff;
@@ -443,6 +443,23 @@
 /* Badge de notificação — oculto por padrão */
 #notifBadge {
   display: none;
+}
+
+.login-overlay {
+  background: radial-gradient(circle at top, rgba(57, 98, 64, 0.35), rgba(9, 16, 22, 0.95));
+}
+
+.login-card {
+  max-width: 460px;
+  border: 1px solid rgba(177, 214, 54, 0.35);
+}
+
+.login-logo {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.75rem;
 }
 
 @media (max-width: 768px) {
